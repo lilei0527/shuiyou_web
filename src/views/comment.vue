@@ -32,6 +32,7 @@ interface Comment {
 var pageNum = 1;
 const commentList = ref<Array<Comment>>([]);
 const getCommentList = () => {
+    busy.value = true;
     // 发送请求
     var response = axios.get('http://localhost:8081/comment/getComments', {
         params: {
@@ -52,6 +53,11 @@ const getCommentList = () => {
             commentList.value.push(...newItems);
             pageNum++;
         }
+
+        if(newItems.length == 10){
+            pageNum++;
+        }
+        busy.value = false;
     })
 }
 
@@ -66,7 +72,7 @@ const reportText = ref('')
 const reportUserId = ref(0);
 const reportCommentId = ref(0);
 const commentUserId = ref(0);
-const commentCId = ref(0);
+const commentCId = ref(0); //根评论id
 
 const reportDialogVisible = ref(false)
 const commentDialogVisible = ref(false)
@@ -174,6 +180,8 @@ function onCommentClick(commentId: number, userId: number) {
     commentCId.value = commentId;
     commentDialogVisible.value = true
 }
+
+const busy = ref(false);
 </script>
 
 
@@ -219,7 +227,7 @@ function onCommentClick(commentId: number, userId: number) {
             <div class="edior">
                 <Mind :item=mind />
                 <!-- 评论区 -->
-                <div class="comment" v-infinite-scroll="getCommentList">
+                <div class="comment" v-infinite-scroll="getCommentList" infinite-scroll-disabled="busy">
                     <div class="comment-title-row"><img src="../assets/svg/planlist.svg"
                             style="width: 20px; max-height: 20px;" alt="方案"><span class="plan-name">方案列表</span></div>
                     <div v-for="(item, index) in commentList" :key="index">
@@ -239,16 +247,18 @@ function onCommentClick(commentId: number, userId: number) {
                             <!-- 子评论 -->
                             <div class="child-comment" v-for="(childItem, index) in item.childComments" :key="index">
                                 <div class="user-header">
-                                    <img :src="item.fromUserHeadImage" alt="" style="width: 30px; max-height: 30px;" />
+                                    <img :src="childItem.fromUserHeadImage" alt="" style="width: 30px; max-height: 30px;" />
                                     <span class="user-name">{{ childItem.fromUserName }}</span>
+                                    <span class="reply-text">回复</span>
+                                    <span class="user-name-child">{{ childItem.toUserName }}</span>
                                     <span class="time">{{ childItem.createTime }}</span>
                                 </div>
-                                <div v-html="childItem.content" class="user-content">
+                                <div v-html="childItem.content" class="user-content_child">
                                 </div>
                                 <span class="report-operate"
                                     @click="onReportClick(childItem.id, childItem.fromUserId)">举报</span><span
                                     class="reply-operate"
-                                    @click="onCommentClick(childItem.id, childItem.fromUserId)">回复</span>
+                                    @click="onCommentClick(item.id, childItem.fromUserId)">回复</span>
                                 <!-- <hr class="comment-line" /> -->
                             </div>
                         </el-card>
@@ -294,6 +304,7 @@ el-button {
 }
 
 .user-header {
+    margin-top: 10px;
     display: flex;
     align-items: center;
 }
@@ -305,10 +316,22 @@ el-button {
     font-weight: 600;
 }
 
+.user-name-child {
+    font-size: 16px;
+    color: black;
+    font-weight: 600;
+}
+
 .user-content {
     margin-left: 60px;
     color: black;
-    font-weight: 500;
+    font-weight: 600;
+}
+
+.user-content_child {
+    margin-left: 50px;
+    color: black;
+    font-weight: 600;
 }
 
 .comment-line {
@@ -343,11 +366,25 @@ el-button {
     color: #999;
     font-size: 12px;
     margin-left: 60px;
+    cursor: pointer;
+}
+
+.report-operate:hover{
+    color: #F5CB2B;
 }
 
 .reply-operate {
     color: #999;
     font-size: 12px;
     margin-left: 10px;
+    cursor: pointer;
+}
+
+.reply-operate:hover{
+    color: #F5CB2B;
+}
+
+.reply-text{
+    margin: 0 10px 0 10px;
 }
 </style>
