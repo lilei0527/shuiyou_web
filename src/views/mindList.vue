@@ -80,6 +80,11 @@ const handleCurrentChange = (val: number) => {
     scrollToTop();
 }
 
+const activeNames = ref(['1'])
+const handleChange = (val: string[]) => {
+    console.log(val)
+}
+
 </script>
 <template>
 
