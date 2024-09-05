@@ -9,8 +9,6 @@ import { reactive, ref } from 'vue'
 const visible = defineModel<boolean>('visible')
 const type = defineModel<number>('type')
 
-const isVisible = 
-
 function cancel() {
     visible.value = false;
 }
@@ -43,7 +41,7 @@ const form = reactive({
 </script>
 
 <template>
-    <el-dialog v-model="isVisible" title="登录" center width="300" close-on-press-escape @cancel="cancel" @closed="reset">
+    <el-dialog v-model="visible" title="登录" center width="300" close-on-press-escape @cancel="cancel" @closed="reset">
         <el-form :model="form" label-width="auto" style="max-width: 600px">
             <el-form-item label="邮箱">
                 <el-input v-model="form.account" />

@@ -7,8 +7,7 @@ import { ref, onMounted, onBeforeUnmount, shallowRef, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import LoginDialog from '@/components/LoginDialog.vue';
-import RegisterDialog from '@/components/RegisterDialog.vue';
+import AuthDialog from '../components/AuthDialog.vue';
 
 
 
@@ -178,13 +177,11 @@ function onReportClick(commentId: number, userId: number) {
 }
 
 
-const visible = ref(false);
-const type = ref(0);
 function onCommentClick(commentId: number, userId: number) {
     //判断是否已登录
     const token = localStorage.getItem('token');
     if (token == null) {
-        visible.value = true;
+        showLoginDialog.value = true;
         return;
     }
 
@@ -194,11 +191,30 @@ function onCommentClick(commentId: number, userId: number) {
 }
 
 const busy = ref(false);
+
+
+const showLoginDialog = ref(false)
+const showRegisterDialog = ref(false)
+
+
+function handleLogin() {
+    showLoginDialog.value = false;
+}
+
+function handleRegister() {
+    showRegisterDialog.value = false;
+}
+
 </script>
 
 <template>
-    <LoginDialog v-model:visible="visible" v-model:type="type"></LoginDialog>
-    <!-- <RegisterDialog v-model="visibleModel"></RegisterDialog> -->
+    <AuthDialog
+      v-model:isLoginDialogVisible="showLoginDialog"
+      v-model:isRegisterDialogVisible="showRegisterDialog"
+      @login="handleLogin"
+      @register="handleRegister"
+    />
+
     <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
         <el-radio-group v-model="reportRadio" size="large">
             <el-radio :value="0">侮辱性、歧视性或攻击性言语</el-radio>
