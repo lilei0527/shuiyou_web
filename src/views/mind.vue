@@ -94,7 +94,7 @@ const submitComment = () => {
         toUserId: mind.userId,
     }, {
         headers: {
-            'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+            'Authorization': localStorage.getItem('token')
         },
     });
 
@@ -118,7 +118,7 @@ function report() {
         toUserId: props.item.userId
     }, {
         headers: {
-            'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+            'Authorization': localStorage.getItem('token')
         },
     }).then(res => {
         console.log(res)
@@ -136,7 +136,7 @@ function report() {
 function follow(mindId: number) {
     axios.post('http://localhost:8081/follow', { mindId: mindId }, {
         headers: {
-            'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+            'Authorization': localStorage.getItem('token')
         },
     }).then(res => {
         console.log(res)

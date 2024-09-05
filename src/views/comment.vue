@@ -42,7 +42,7 @@ const getCommentList = () => {
             pageSize: 10
         },
         headers: {
-            'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+            'Authorization': localStorage.getItem('token')
         },
     });
 
@@ -88,7 +88,7 @@ function report() {
         toUserId: reportUserId.value
     }, {
         headers: {
-            'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+            'Authorization': localStorage.getItem('token')
         },
     }).then(res => {
         console.log(res)
@@ -113,7 +113,7 @@ const submitComment = () => {
         commentId: commentCId.value
     }, {
         headers: {
-            'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+            'Authorization': localStorage.getItem('token')
         },
     });
 
@@ -171,6 +171,12 @@ const mode = 'default'
 
 
 function onReportClick(commentId: number, userId: number) {
+    //判断是否已登录
+    const token = localStorage.getItem('token');
+    if (token == null) {
+        showLoginDialog.value = true;
+        return;
+    }
     reportCommentId.value = commentId
     reportUserId.value = userId
     reportDialogVisible.value = true

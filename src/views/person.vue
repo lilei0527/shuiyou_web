@@ -20,7 +20,7 @@ async function loadMyMindMore() {
     const response =
         await axios.get('http://localhost:8081/mind/getMyMind', {
             headers: {
-                'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+                'Authorization': localStorage.getItem('token')
             },
             params: {
                 pageNum: myMindPageNum,
@@ -41,7 +41,7 @@ async function loadMyFollowMore() {
     const response =
         await axios.get('http://localhost:8081/follow/getMyFollow', {
             headers: {
-                'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+                'Authorization': localStorage.getItem('token')
             },
             params: {
                 pageNum: myFollowPageNum,
@@ -63,7 +63,7 @@ async function loadMyReplyMore() {
     const response =
         await axios.get('http://localhost:8081/comment/getMyComments', {
             headers: {
-                'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+                'Authorization': localStorage.getItem('token')
             },
             params: {
                 pageNum: myReplyPageNum,
@@ -85,7 +85,7 @@ async function loadReplyMyMore() {
     const response =
         await axios.get('http://localhost:8081/comment/getCommentsToMe', {
             headers: {
-                'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+                'Authorization': localStorage.getItem('token')
             },
             params: {
                 pageNum: replyMyPageNum,

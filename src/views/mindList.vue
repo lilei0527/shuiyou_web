@@ -23,7 +23,7 @@ const fetchType = async () => {
         const response =
             await axios.get('http://localhost:8081/type/getAll', {
                 headers: {
-                    'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+                    'Authorization': localStorage.getItem('token')
                 },
             });
         typeList.value = response.data.data;
@@ -41,7 +41,7 @@ const fetchMind = async (pageNum: number, pageSize: number) => {
         const response =
             await axios.get('http://localhost:8081/mind', {
                 headers: {
-                    'Authorization': `eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjR9.gGS1UJcT_Q7EjFo6NrvSQPLAJK87DN2DY4SOrRueS9gMR678jz2_Rss8M8oD-6UAJIwYU4LFdrhD95aXTftxGg`
+                    'Authorization': localStorage.getItem('token')
                 },
                 params: {
                     current: pageNum,
