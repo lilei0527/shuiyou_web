@@ -285,6 +285,11 @@ table {
 
 .mind_operation_text {
     margin-left: 10px;
+    cursor: pointer;
+}
+
+.mind_operation_text:hover {
+    color: #F5CB2B;
 }
 
 .mind_content_col {

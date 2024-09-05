@@ -3,10 +3,12 @@
 import axios from 'axios';
 import { useRoute } from 'vue-router'
 import Mind from './mind.vue';
-import { ref, onMounted, onBeforeUnmount, shallowRef } from 'vue';
+import { ref, onMounted, onBeforeUnmount, shallowRef, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import LoginDialog from '@/components/LoginDialog.vue';
+import RegisterDialog from '@/components/RegisterDialog.vue';
 
 
 
@@ -54,7 +56,7 @@ const getCommentList = () => {
             pageNum++;
         }
 
-        if(newItems.length == 10){
+        if (newItems.length == 10) {
             pageNum++;
         }
         busy.value = false;
@@ -175,7 +177,17 @@ function onReportClick(commentId: number, userId: number) {
     reportDialogVisible.value = true
 }
 
+
+const visible = ref(false);
+const type = ref(0);
 function onCommentClick(commentId: number, userId: number) {
+    //判断是否已登录
+    const token = localStorage.getItem('token');
+    if (token == null) {
+        visible.value = true;
+        return;
+    }
+
     commentUserId.value = userId;
     commentCId.value = commentId;
     commentDialogVisible.value = true
@@ -184,8 +196,9 @@ function onCommentClick(commentId: number, userId: number) {
 const busy = ref(false);
 </script>
 
-
 <template>
+    <LoginDialog v-model:visible="visible" v-model:type="type"></LoginDialog>
+    <!-- <RegisterDialog v-model="visibleModel"></RegisterDialog> -->
     <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
         <el-radio-group v-model="reportRadio" size="large">
             <el-radio :value="0">侮辱性、歧视性或攻击性言语</el-radio>
@@ -247,7 +260,8 @@ const busy = ref(false);
                             <!-- 子评论 -->
                             <div class="child-comment" v-for="(childItem, index) in item.childComments" :key="index">
                                 <div class="user-header">
-                                    <img :src="childItem.fromUserHeadImage" alt="" style="width: 30px; max-height: 30px;" />
+                                    <img :src="childItem.fromUserHeadImage" alt=""
+                                        style="width: 30px; max-height: 30px;" />
                                     <span class="user-name">{{ childItem.fromUserName }}</span>
                                     <span class="reply-text">回复</span>
                                     <span class="user-name-child">{{ childItem.toUserName }}</span>
@@ -331,7 +345,7 @@ el-button {
 .user-content_child {
     margin-left: 50px;
     color: black;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .comment-line {
@@ -369,7 +383,7 @@ el-button {
     cursor: pointer;
 }
 
-.report-operate:hover{
+.report-operate:hover {
     color: #F5CB2B;
 }
 
@@ -380,11 +394,11 @@ el-button {
     cursor: pointer;
 }
 
-.reply-operate:hover{
+.reply-operate:hover {
     color: #F5CB2B;
 }
 
-.reply-text{
+.reply-text {
     margin: 0 10px 0 10px;
 }
 </style>
