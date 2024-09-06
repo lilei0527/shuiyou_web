@@ -21,11 +21,7 @@ const typeList: any = ref(null);
 const fetchType = async () => {
     try {
         const response =
-            await axios.get('http://localhost:8081/type/getAll', {
-                headers: {
-                    'Authorization': localStorage.getItem('token')
-                },
-            });
+            await axios.get('http://localhost:8081/type/getAll');
         typeList.value = response.data.data;
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -39,10 +35,7 @@ const mindList: any = ref(null);
 const fetchMind = async (pageNum: number, pageSize: number) => {
     try {
         const response =
-            await axios.get('http://localhost:8081/mind', {
-                headers: {
-                    'Authorization': localStorage.getItem('token')
-                },
+            await axios.get('http://localhost:8081/mind/selectAll', {
                 params: {
                     current: pageNum,
                     size: pageSize,

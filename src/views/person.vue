@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import type { TabsPaneContext } from 'element-plus'
 import Mind from './mind.vue';
 import axios from 'axios';
+import { user } from '../stores/global'
 
 const activeName = ref('my-mind')
 
@@ -106,8 +107,9 @@ async function loadReplyMyMore() {
         <div class="main-content">
             <div class="12">
                 <div class='info'>
-                    <el-avatar shape="square" :size="size" :src="avatar" class="avatar" />
-                    <strong class="name">诚实可靠小郎君</strong>
+                    <el-avatar shape="square" :size="size" :src="user.headImage" class="avatar" />
+                    <div class="name-edit"><span class="name">{{ user.username }}</span>
+                    </div>
                 </div>
 
                 <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
@@ -172,21 +174,22 @@ async function loadReplyMyMore() {
 <style scoped="sass">
 .info {
     /* margin: 20px auto 20px auto; */
-    display: inline;
+    /* display: inline; */
     /* justify-content: center; */
+    /* display: flex; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column
 }
 
-.avatar {
+.name-edit {
     display: flex;
-    margin: 10px auto 10px auto;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
 }
 
-.name {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: space-around;
-    flex-direction: column;
-}
 
 .demo-tabs>.el-tabs__content {
     padding: 32px;

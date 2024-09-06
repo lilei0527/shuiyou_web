@@ -12,20 +12,47 @@
                         <button type="submit"><i class="fa fa-search"></i></button>
                     </form>
                 </div>
+
                 <router-link to="/person">
-                    <img src="http://123.60.87.243/images/xpic5928.jpg" class="avatar" width="24"
-                        style="width: 40px; max-height: 40px;" alt="头像">
+                    <img :src="user.headImage || '../assets/image/default_avatar.png'" class="avatar" width="24"
+                        style="width: 40px; max-height: 40px;" alt="头像" @mouseenter="showActions"
+                        @mouseleave="hideActions">
                 </router-link>
-                <span class="username">诚实可靠小郎君</span>
+                <span class="username" @mouseenter="showActions" @mouseleave="hideActions">{{ user.username }}</span>
+
+                <ul v-if="actionsVisible" class="action-list" @mouseenter="showActions">
+                    <li>个人主页</li>
+                    <li>修改信息</li>
+                    <li>退出登录</li>
+                </ul>
             </div>
         </div>
         <router-view></router-view>
     </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref } from 'vue';
+import { user } from '../stores/global'
+
+var timer: number | null | undefined = null;
+
+function showActions() {
+    actionsVisible.value = true
+    if (timer !== null)
+        clearTimeout(timer)
+}
+
+function hideActions() {
+    timer = setTimeout(() => {
+        actionsVisible.value = false
+    }, 1000);
+    timer;
+    timer = null;
+}
 
 
+const actionsVisible = ref(false)
 
 </script>
 
@@ -153,6 +180,7 @@ table {
     display: flex;
     align-items: center;
     margin-left: auto;
+    position: relative
 }
 
 form.example {
@@ -206,9 +234,36 @@ form.example::content {
 .username {
     margin-left: 10px;
     font-size: 16px;
+    cursor: pointer;
 }
 
 .avatar {
     margin-left: 10px;
+}
+
+.action-list {
+    list-style-type: none;
+    /* 移除默认的列表样式 */
+    padding-left: 0;
+    /* 移除左侧填充 */
+    width: 120px;
+    list-style-type: none;
+    position: absolute;
+    top: 57px;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* display: none; */
+}
+
+.action-list li {
+    /* padding: 8px 16px; */
+    text-align: center;
+    cursor: pointer;
+}
+
+.action-list li:hover {
+    background-color: #f1f1f1;
 }
 </style>

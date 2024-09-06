@@ -2,6 +2,7 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { reactive } from 'vue'
+import { user } from '../stores/global' 
 
 const isLoginDialogVisible = defineModel<boolean>('isLoginDialogVisible')
 const isRegisterDialogVisible = defineModel<boolean>('isRegisterDialogVisible')
@@ -12,8 +13,12 @@ function login() {
       ElMessage.error(response.data.message)
       return
     } else if (response.data.code == 200) {
-      let token = response.data.data
-      localStorage.setItem('token', token)
+      var userData = response.data.data
+      localStorage.setItem('token', userData.token)
+      localStorage.setItem('accountName',userData.accountName)
+      localStorage.setItem('headImage',userData.headImage)
+      user.username = userData.accountName
+      user.headImage = userData.headImage
       isLoginDialogVisible.value = false
     }
   })

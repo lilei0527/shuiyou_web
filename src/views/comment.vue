@@ -214,12 +214,8 @@ function handleRegister() {
 </script>
 
 <template>
-    <AuthDialog
-      v-model:isLoginDialogVisible="showLoginDialog"
-      v-model:isRegisterDialogVisible="showRegisterDialog"
-      @login="handleLogin"
-      @register="handleRegister"
-    />
+    <AuthDialog v-model:isLoginDialogVisible="showLoginDialog" v-model:isRegisterDialogVisible="showRegisterDialog"
+        @login="handleLogin" @register="handleRegister" />
 
     <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
         <el-radio-group v-model="reportRadio" size="large">
