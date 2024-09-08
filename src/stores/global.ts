@@ -1,6 +1,9 @@
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 
 export const user = reactive({
-    username: localStorage.getItem('accountName'),
+    accountName: localStorage.getItem('accountName'),
     headImage: localStorage.getItem('headImage'),
+    token: localStorage.getItem('token')
 })
+
+export const isLogin = ref(false);

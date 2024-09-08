@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
-import { reactive } from 'vue'
+import { ElMessage, type FormInstance } from 'element-plus'
+import { reactive, ref } from 'vue'
 import { user } from '../stores/global' 
 
 const isLoginDialogVisible = defineModel<boolean>('isLoginDialogVisible')
@@ -17,8 +17,9 @@ function login() {
       localStorage.setItem('token', userData.token)
       localStorage.setItem('accountName',userData.accountName)
       localStorage.setItem('headImage',userData.headImage)
-      user.username = userData.accountName
+      user.accountName = userData.accountName
       user.headImage = userData.headImage
+      user.token = userData.token
       isLoginDialogVisible.value = false
     }
   })
@@ -80,6 +81,31 @@ const registerForm = reactive({
   password: '',
   confirmPassword: ''
 })
+
+const isRegisterFormValid = ref(false) // 表单是否验证通过
+const redisterRuleFormRef = ref<FormInstance>()
+
+
+const rules = {
+  account: [
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 5, max: 20, message: '账号长度在 6 到 16 个字符', trigger: 'blur' }
+  ],
+
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在 6 到 16 个字符', trigger: 'blur' }
+  ],
+}
+
+function handleInput() {
+  // 每次输入时验证表单
+  if (redisterRuleFormRef.value) {
+    redisterRuleFormRef.value.validate((valid: boolean) => {
+      isRegisterFormValid.value = valid; // 根据验证结果控制按钮是否可用
+    });
+  }
+}
 </script>
 
 <template>
@@ -94,11 +120,11 @@ const registerForm = reactive({
     @closed="loginReset"
   >
     <el-form :model="loginForm" label-width="auto" style="max-width: 600px">
-      <el-form-item label="邮箱">
+      <el-form-item label="账号">
         <el-input v-model="loginForm.account" />
       </el-form-item>
       <el-form-item label="密码">
-        <el-input v-model="loginForm.password" />
+        <el-input v-model="loginForm.password" type        ="password" />
       </el-form-item>
       <div class="register-link">
         <span>没有账号?</span><span class="to-register" @click="onRegisterClick">去注册</span>
@@ -123,18 +149,15 @@ const registerForm = reactive({
     @closed="registerReset"
   >
     <div class="dialog-content">
-      <el-form :model="registerForm" label-width="auto" style="max-width: 600px">
-        <el-form-item label="邮箱">
+      <el-form :model="registerForm" label-width="auto" style="max-width: 600px" :rules="rules" ref="redisterRuleFormRef" @input="handleInput">
+        <el-form-item label="账号" style="width: 90%;" prop="account">
           <el-input v-model="registerForm.account" />
         </el-form-item>
-        <el-form-item label="验证码">
-          <el-input v-model="registerForm.code" />
+        <el-form-item label="密码" style="width: 90%;" prop="password">
+          <el-input v-model="registerForm.password" type="password" />
         </el-form-item>
-        <el-form-item label="密码">
-          <el-input v-model="registerForm.password" />
-        </el-form-item>
-        <el-form-item label="确认密码">
-          <el-input v-model="registerForm.confirmPassword" />
+        <el-form-item label="确认密码" style="width: 90%;">
+          <el-input v-model="registerForm.confirmPassword" type="password"/>
         </el-form-item>
       </el-form>
     </div>
@@ -142,7 +165,7 @@ const registerForm = reactive({
     <template #footer>
       <div class="text-center">
         <el-button @click="registerCancel"> 取消 </el-button>
-        <el-button type="primary" @click="register"> 注册 </el-button>
+        <el-button  @click="register" :disabled="!isRegisterFormValid"> 注册 </el-button>
       </div>
     </template>
   </el-dialog>

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const size = "large";
-const avatar = "https://cdn.v2ex.com/gravatar/a4c268034744e655e7c45451b31bedd1?s=24&amp;d=retro"
 import { ref } from 'vue'
 import type { TabsPaneContext } from 'element-plus'
 import Mind from './mind.vue';
@@ -8,6 +6,7 @@ import axios from 'axios';
 import { user } from '../stores/global'
 
 const activeName = ref('my-mind')
+const size = "large";
 
 const handleClick = (tab: TabsPaneContext, event: Event) => {
     console.log(tab, event)
@@ -18,6 +17,7 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
 const myMindList = ref<Array<any>>([]);
 var myMindPageNum = 1;
 async function loadMyMindMore() {
+    if(activeName.value!= "my-mind") return;
     const response =
         await axios.get('http://localhost:8081/mind/getMyMind', {
             headers: {
@@ -39,6 +39,7 @@ async function loadMyMindMore() {
 const myFollowList = ref<Array<any>>([]);
 var myFollowPageNum = 1;
 async function loadMyFollowMore() {
+    if(activeName.value!= "my-follow") return;
     const response =
         await axios.get('http://localhost:8081/follow/getMyFollow', {
             headers: {
@@ -61,6 +62,7 @@ async function loadMyFollowMore() {
 const myReplyList = ref<Array<any>>([]);
 var myReplyPageNum = 1;
 async function loadMyReplyMore() {
+    if(activeName.value!= "my-reply") return;
     const response =
         await axios.get('http://localhost:8081/comment/getMyComments', {
             headers: {
@@ -83,6 +85,7 @@ async function loadMyReplyMore() {
 const replyMyList = ref<Array<any>>([]);
 var replyMyPageNum = 1;
 async function loadReplyMyMore() {
+    if(activeName.value!= "reply-my") return;
     const response =
         await axios.get('http://localhost:8081/comment/getCommentsToMe', {
             headers: {
@@ -102,36 +105,35 @@ async function loadReplyMyMore() {
 </script>
 
 <template>
-
     <div class="my-content">
         <div class="main-content">
             <div class="12">
                 <div class='info'>
                     <el-avatar shape="square" :size="size" :src="user.headImage" class="avatar" />
-                    <div class="name-edit"><span class="name">{{ user.username }}</span>
+                    <div class="name-edit"><span class="name">{{ user.accountName }}</span>
                     </div>
                 </div>
 
                 <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
                     <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore">
                         <div v-if="myMindList.length > 0">
-                            <Mind v-for="(item, index) in myMindList" :key="index" :item=item>
+                            <Mind v-for="(item, index) in myMindList" :key="index" :mind=item>
                             </Mind>
                         </div>
                         <div v-if="myMindList.length == 0">
-                            <el-empty description="description" />
+                            <el-empty description="暂无数据" />
                         </div>
                     </el-tab-pane>
                     <el-tab-pane label="我的关注" name="my-follow" v-infinite-scroll="loadMyFollowMore">
                         <div v-if="myFollowList.length == 0">
                             <el-empty description="暂无数据" />
                         </div>
-                        <Mind v-for="(item, index) in myFollowList" :key="index" :item=item>
+                        <Mind v-for="(item, index) in myFollowList" :key="index" :mind=item>
                         </Mind>
                     </el-tab-pane>
                     <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore">
                         <div v-for="(item, index) in myReplyList" :key="index">
-                            <div>
+                            <div class="mind-content">
                                 <div>{{ item.mindContent }}</div>
                             </div>
                             <div class="user-header">
@@ -142,6 +144,9 @@ async function loadReplyMyMore() {
                             <div v-html="item.content" class="user-content">
                             </div>
                             <hr class="comment-line" />
+                        </div>
+                        <div v-if="myReplyList.length == 0">
+                            <el-empty description="暂无数据" />
                         </div>
                     </el-tab-pane>
                     <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore">
@@ -156,6 +161,9 @@ async function loadReplyMyMore() {
                             </div>
                             <hr class="comment-line" />
                         </div>
+                        <div v-if="replyMyList.length == 0">
+                            <el-empty description="暂无数据" />
+                        </div>
                     </el-tab-pane>
                 </el-tabs>
             </div>
@@ -167,10 +175,7 @@ async function loadReplyMyMore() {
             </div>
         </div>
     </div>
-
-
 </template>
-
 <style scoped="sass">
 .info {
     /* margin: 20px auto 20px auto; */

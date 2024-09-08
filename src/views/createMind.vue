@@ -1,104 +1,190 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
 import { ref } from 'vue'
-
-import { Delete, Download, Plus, ZoomIn } from '@element-plus/icons-vue'
-
-import type { UploadFile } from 'element-plus'
-import axios from 'axios';
+import { ElMessage, type FormInstance, type UploadProps, type UploadUserFile } from 'element-plus'
+import axios from '@/axios'
+import { Plus } from '@element-plus/icons-vue'
+import router from '@/router'
+import { useRouter } from 'vue-router'
 
 const dialogImageUrl = ref('')
 const dialogVisible = ref(false)
-const disabled = ref(false)
 
-const handleRemove = (file: UploadFile) => {
-  console.log(file)
+const handleRemove: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
+  console.log(uploadFile, uploadFiles)
 }
 
-const handlePictureCardPreview = (file: UploadFile) => {
-  dialogImageUrl.value = file.url!
+const handlePictureCardPreview: UploadProps['onPreview'] = (uploadFile) => {
+  dialogImageUrl.value = uploadFile.url!
   dialogVisible.value = true
 }
 
-const handleDownload = (file: UploadFile) => {
-  console.log(file)
+// 图片压缩处理
+const handleBeforeUpload = (file: File) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (e) => {
+      const img = new Image()
+      const result = e?.target?.result // 使用可选链检查
+      if (typeof result === 'string') {
+        img.src = result
+      } else {
+        console.error('加载文件时出现问题')
+      }
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        const maxWidth = 800 // 设置最大宽度
+        const maxHeight = 800 // 设置最大高度
+        let width = img.width
+        let height = img.height
+        // 计算新的图片尺寸，保持宽高比
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height *= maxWidth / width))
+            width = maxWidth
+          } else {
+            width = Math.round((width *= maxHeight / height))
+            height = maxHeight
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        if (!ctx) {
+          throw new Error('无法获取 2D 绘图上下文')
+        }
+        ctx.drawImage(img, 0, 0, width, height)
+        // 将压缩后的图片导出为 Blob 对象
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              throw new Error('压缩后的图片 Blob 对象为空')
+            }
+            const compressedFile = new File([blob], file.name, {
+              type: file.type
+            })
+            resolve(compressedFile) // 返回压缩后的图片文件
+          },
+          file.type,
+          0.7
+        ) // 0.7 为图片压缩质量
+      }
+    }
+    reader.onerror = (error) => {
+      console.error('Error reading file:', error)
+      reject(error)
+    }
+  })
+}
+
+const fileList = ref<UploadUserFile[]>([])
+const headers = {
+  Authorization: localStorage.getItem('token')
 }
 
 // do not use same name with ref
 const form = reactive({
-  type: 0,
-  desc: '',
+  type: 1,
+  desc: ''
 })
 
-
 const onSubmit = async () => {
-  var response = await axios.post('http://localhost:8081/mind', {
+  var imageUrls = ''
+  fileList.value.forEach((file) => {
+    if (file.response && (file.response as { data: unknown }).data) {
+      var url = (file.response as { data: string }).data
+      imageUrls += (url + ';')
+    }
+  })
+  //去掉最后一个分号
+  imageUrls = imageUrls.slice(0, -1)
+
+  var response = await axios.post('/mind', {
     typeId: form.type,
     content: form.desc,
-    imgUrl: dialogImageUrl.value,
-  }, {
-    headers: {
-      'Authorization': localStorage.getItem('token')
-    },
-  });
-  //发布成功弹窗
-  response.data.data == true ? alert('发布成功') : alert('发布失败')
+    images: imageUrls
+  })
+  ElMessage.success('发布成功')
+  $router.push('/minds')
 }
 
-
 //类型
-const typeList: any = ref(null);
+const typeList: any = ref(null)
 const fetchType = async () => {
   try {
-    const response =
-      await axios.get('http://localhost:8081/type/getAll', {
-        headers: {
-          'Authorization': localStorage.getItem('token')
-        },
-      });
-    typeList.value = response.data.data;
+    const response = await axios.get('/type/getAll', {
+      headers: {
+        Authorization: localStorage.getItem('token')
+      }
+    })
+    typeList.value = response.data.data
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error('Error fetching data:', error)
   }
-};
-fetchType();
+}
+fetchType()
+
+const $router = useRouter()
+function onCancel() {
+  //回到上一级页面
+  $router.go(-1);
+}
+
+const isFormValid = ref(false) // 表单是否验证通过
+const ruleFormRef = ref<FormInstance>()
+
+function handleInput() {
+  // 每次输入时验证表单
+  if (ruleFormRef.value) {
+    ruleFormRef.value.validate((valid: boolean) => {
+      isFormValid.value = valid; // 根据验证结果控制按钮是否可用
+    });
+  }
+}
+
+const rules = {
+  type: [
+    { required: true, message: '请选择分类', trigger: 'blur' }
+  ],
+  desc: [
+    { required: true, message: '请填写求购描述', trigger: 'blur' }
+  ]
+}
 </script>
 
 <template>
   <div class="my-content">
     <div class="main-content">
-      <el-form :model="form" label-width="auto" style="max-width: 100%">
-        <el-form-item label="分类">
+      <el-form :model="form" label-width="auto" style="max-width: 100%" :rules="rules" ref="ruleFormRef" @input="handleInput">
+        <el-form-item label="分类" prop="type">
           <el-radio-group v-model="form.type">
-            <el-radio v-for="(item, index) in typeList" :key="index" :value=item.id>{{ item.name }}</el-radio>
+            <el-radio v-for="(item, index) in typeList" :key="index" :value="item.id">{{
+              item.name
+            }}</el-radio>
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="求购描述">
+        <el-form-item label="求购描述" prop="desc">
           <el-input v-model="form.desc" type="textarea" rows="10" />
         </el-form-item>
 
         <el-form-item label="上传图片">
-          <el-upload action="#" list-type="picture-card" :auto-upload="false">
-            <el-icon>
-              <Plus />
-            </el-icon>
-            <template #file="{ file }">
-              <div>
-                <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
-                <span class="el-upload-list__item-actions">
-                  <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
-                    <el-icon><zoom-in /></el-icon>
-                  </span>
-                  <span v-if="!disabled" class="el-upload-list__item-delete" @click="handleRemove(file)">
-                    <el-icon>
-                      <Delete />
-                    </el-icon>
-                  </span>
-                </span>
-              </div>
-            </template>
+          <el-upload
+            action="http://123.60.87.243:8080/file/upload"
+            :headers="headers"
+            v-model:file-list="fileList"
+            list-type="picture-card"
+            :on-preview="handlePictureCardPreview"
+            :on-remove="handleRemove"
+            :before-upload="handleBeforeUpload"
+          >
+            <el-icon><Plus /></el-icon>
           </el-upload>
+          <el-dialog v-model="dialogVisible">
+            <img w-full :src="dialogImageUrl" alt="Preview Image" />
+          </el-dialog>
         </el-form-item>
 
         <el-dialog v-model="dialogVisible">
@@ -106,8 +192,8 @@ fetchType();
         </el-dialog>
 
         <el-form-item>
-          <el-button type="primary" @click="onSubmit">发布</el-button>
-          <el-button>取消</el-button>
+          <el-button @click="onCancel">取消</el-button>
+          <el-button  @click="onSubmit" :disabled="!isFormValid">发布</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -118,8 +204,6 @@ fetchType();
       </div>
     </div>
   </div>
-
-
 </template>
 
 <style scoped="scss">

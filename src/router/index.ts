@@ -23,13 +23,17 @@ const router = createRouter({
       {
         path: '/person',
         name: 'person',
-
         component: () => import('../views/person.vue')
       },
       {
         path: '/comment',
         name: 'comment',
         component: () => import('../views/comment.vue')
+      },
+      {
+        path: '/editUserInfo',
+        name: 'editUserInfo',
+        component: () => import('../views/editUserInfo.vue')
       },
 
     ]
