@@ -7,13 +7,8 @@
   <div class="my-header">
     <div class="header-content">
       <img src="../assets/image/sy_logo.png" style="width: 80px; height: 80px" alt="logo" />
-      <el-menu
-        style="width: 100%"
-        :default-active="activeIndex2"
-        class="el-menu-demo"
-        mode="horizontal"
-        @select="handleSelect"
-      >
+      <el-menu style="width: 100%" :default-active="activeIndex2" class="el-menu-demo" mode="horizontal"
+        @select="handleSelect">
         <el-menu-item index="1">广场</el-menu-item>
       </el-menu>
       <div class="info-content">
@@ -25,25 +20,13 @@
         </div> -->
 
         <div v-if="user.token != null" class="personal-info">
-          <img
-            :src="user.headImage || '../assets/image/default_avatar.png'"
-            class="avatar"
-            width="24"
-            style="width: 40px; max-height: 40px"
-            alt="头像"
-            @mouseenter="showActions"
-            @mouseleave="scheduleHideMenu"
-          />
+          <img :src="user.headImage || '../assets/image/default_avatar.png'" class="avatar" width="24"
+            style="width: 40px; max-height: 40px" alt="头像" @mouseenter="showActions" @mouseleave="scheduleHideMenu" />
           <span class="username" @mouseenter="showActions" @mouseleave="scheduleHideMenu">{{
             user.accountName
           }}</span>
 
-          <ul
-            v-if="actionsVisible"
-            class="action-list"
-            @mouseenter="cancelHideMenu"
-            @mouseleave="scheduleHideMenu"
-          >
+          <ul v-if="actionsVisible" class="action-list" @mouseenter="cancelHideMenu" @mouseleave="scheduleHideMenu">
             <li @click="goto('/person')">个人主页</li>
             <li @click="goto('/editUserInfo')">修改信息</li>
             <li @click="logout">退出登录</li>
@@ -124,6 +107,7 @@ const handleSelect = (key: string, keyPath: string[]) => {
 
 <style>
 @import '../assets/base.css';
+
 body {
   margin: 0;
   padding: 0;
@@ -179,11 +163,7 @@ table {
   margin-top: 30px;
 }
 
-.fr {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
+
 
 .mind_operation_row {
   display: flex;
@@ -229,7 +209,8 @@ table {
   display: flex;
   margin-left: auto;
   margin-right: auto;
-  width: 1200px;
+  padding: 20px;
+  width: 1300px;
   height: 100%;
   align-items: center;
 }

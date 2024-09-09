@@ -2,15 +2,13 @@
 import axios from '@/axios'
 import { useRoute } from 'vue-router'
 import Mind from './mind.vue'
-import { ref, onMounted, onBeforeUnmount, shallowRef, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
-import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import AuthDialog from '../components/AuthDialog.vue'
-import { isLogin } from '@/stores/global'
+import CommentDialog from '../components/commentDialog.vue'
 
 const route = useRoute()
-var mindId = route.query.id
+var mindId = Number(route.query.id);
 const mind = ref<any>()
 
 interface Comment {
@@ -79,12 +77,10 @@ onMounted(() => {
 
 const reportRadio = ref(3)
 const reportText = ref('')
-
 const reportUserId = ref(0)
 const reportCommentId = ref(0)
 const commentUserId = ref(0)
 const commentCId = ref(0) //根评论id
-
 const reportDialogVisible = ref(false)
 const commentDialogVisible = ref(false)
 
@@ -117,48 +113,6 @@ function report() {
   reportDialogVisible.value = false
 }
 
-//提交评论
-const submitComment = () => {
-  // 发送请求
-  var response = axios.post(
-    'http://localhost:8081/comment',
-    {
-      content: valueHtml.value,
-      mindId: mindId,
-      toUserId: commentUserId.value,
-      commentId: commentCId.value
-    },
-    {
-      headers: {
-        Authorization: localStorage.getItem('token')
-      }
-    }
-  )
-
-  response
-    .then(function (response) {
-      commentDialogVisible.value = false
-
-      for (let i = 0; i < commentList.value.length; i++) {
-        if (commentList.value[i].id === commentCId.value) {
-          commentList.value[i].childComments.push(response.data.data)
-          break
-        }
-      }
-
-      if (mind.value) {
-        if (mind.value.commentNum === null) {
-          mind.value.commentNum = 0
-        }
-        mind.value.commentNum += 1
-      }
-    })
-    .catch(function (error) {
-      console.log(error)
-    })
-}
-
-
 
 function onReportClick(commentId: number, userId: number) {
   //判断是否已登录
@@ -185,13 +139,26 @@ function onCommentClick(commentId: number, userId: number) {
   commentDialogVisible.value = true
 }
 
-const busy = ref(false)
 
+//关注帖子
+function follow(mindId: number) {
+  axios.post('/follow', { mindId: mindId }).then((res) => {
+    console.log(res)
+    ElMessage('已关注')
+  })
+}
+
+
+const busy = ref(false)
 const showLoginDialog = ref(false)
 </script>
 
+
+
 <template>
-  <AuthDialog v-model:isLoginDialogVisible="isLogin" />
+  <!-- <AuthDialog v-model:isLoginDialogVisible="isLogin" /> -->
+  <CommentDialog v-model:commentDialogVisible="commentDialogVisible" v-model:commentList="commentList"
+    v-model:mind="mind" :mindId="mindId" :toUserId="commentUserId" :commentId="commentCId" />
 
   <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
     <el-radio-group v-model="reportRadio" size="large">
@@ -212,21 +179,39 @@ const showLoginDialog = ref(false)
     </template>
   </el-dialog>
 
-  
+
 
   <div class="my-content">
     <div class="main-content">
       <div class="edior">
-        
-        <Mind :mind="mind" v-if="mind"/>
+
+        <Mind :mind="mind" v-if="mind" />
+
+        <!-- 操作栏 -->
+        <tr class="mind_operation_row" v-if="mind">
+          <span class="mind_operation_col" plain @click="onReportClick(0, mind.fromUserId)">
+            <img src="../assets/svg/report.svg" style="width: 40px; max-height: 40px" alt="举报" />
+            <span class="mind_operation_text">举报</span>
+          </span>
+          <div @click="onCommentClick(0, mind.userId)">
+            <span class="mind_operation_col">
+              <img src="../assets/svg/comment.svg" style="width: 40px; max-height: 40px" alt="评论" />
+              <span class="mind_operation_text">{{ mind.commentNum }}</span>
+            </span>
+          </div>
+
+          <span class="mind_operation_col" @click="follow(mind.id)">
+            <img src="../assets/svg/collect.svg" style="width: 40px; max-height: 40px" alt="关注" />
+            <span class="mind_operation_text">关注</span>
+          </span>
+          <span></span>
+        </tr>
+
         <!-- 评论区 -->
         <div class="comment" v-infinite-scroll="getCommentList" infinite-scroll-disabled="busy">
           <div class="comment-title-row">
-            <img
-              src="../assets/svg/planlist.svg"
-              style="width: 20px; max-height: 20px"
-              alt="方案"
-            /><span class="plan-name">方案列表</span>
+            <img src="../assets/svg/planlist.svg" style="width: 20px; max-height: 20px" alt="方案" /><span
+              class="plan-name">方案列表</span>
           </div>
           <div v-for="(item, index) in commentList" :key="index">
             <el-card>
@@ -236,38 +221,22 @@ const showLoginDialog = ref(false)
                 <span class="time">{{ item.createTime }}</span>
               </div>
               <div v-html="item.content" class="user-content"></div>
-              <span class="report-operate" @click="onReportClick(item.id, item.fromUserId)"
-                >举报</span
-              ><span class="reply-operate" @click="onCommentClick(item.id, item.fromUserId)"
-                >回复</span
-              >
+              <span class="report-operate" @click="onReportClick(item.id, item.fromUserId)">举报</span><span
+                class="reply-operate" @click="onCommentClick(item.id, item.fromUserId)">回复</span>
               <!-- <hr class="comment-line" /> -->
 
               <!-- 子评论 -->
-              <div
-                class="child-comment"
-                v-for="(childItem, index) in item.childComments"
-                :key="index"
-              >
+              <div class="child-comment" v-for="(childItem, index) in item.childComments" :key="index">
                 <div class="user-header">
-                  <img
-                    :src="childItem.fromUserHeadImage"
-                    alt=""
-                    style="width: 30px; max-height: 30px"
-                  />
+                  <img :src="childItem.fromUserHeadImage" alt="" style="width: 30px; max-height: 30px" />
                   <span class="user-name">{{ childItem.fromUserName }}</span>
-                  <span class="reply-text">回复</span>
+                  <span class="reply-text" @click="onCommentClick(childItem.id, childItem.fromUserId)">回复</span>
                   <span class="user-name-child">{{ childItem.toUserName }}</span>
                   <span class="time">{{ childItem.createTime }}</span>
                 </div>
                 <div v-html="childItem.content" class="user-content_child"></div>
-                <span
-                  class="report-operate"
-                  @click="onReportClick(childItem.id, childItem.fromUserId)"
-                  >举报</span
-                ><span class="reply-operate" @click="onCommentClick(item.id, childItem.fromUserId)"
-                  >回复</span
-                >
+                <span class="report-operate" @click="onReportClick(childItem.id, childItem.fromUserId)">举报</span><span
+                  class="reply-operate" @click="onCommentClick(item.id, childItem.fromUserId)">回复</span>
                 <!-- <hr class="comment-line" /> -->
               </div>
             </el-card>
@@ -397,5 +366,25 @@ el-button {
 
 .reply-text {
   margin: 0 10px 0 10px;
+}
+
+.mind_operation_row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.mind_operation_col {
+  display: flex;
+  align-items: center;
+}
+
+.mind_operation_text {
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.mind_operation_text:hover {
+  color: #f5cb2b;
 }
 </style>
