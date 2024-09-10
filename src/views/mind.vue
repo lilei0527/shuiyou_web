@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { defineProps } from 'vue'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+import { Delete, Edit } from '@element-plus/icons-vue'
+import { user } from '@/stores/global'
+import axios from '@/axios'
+import { ElMessage } from 'element-plus'
 
 interface Mind {
   id: number
@@ -19,19 +23,45 @@ const props = defineProps<{
 }>()
 var mind: Mind = props.mind
 
+const myMindList = defineModel<Array<any>>('myMindList') 
+
 var imgUrlList: String[] = []
 if (mind && mind.images != null && mind.images != '') {
   imgUrlList = mind.images.split(',')
 }
 const imageList = ref(imgUrlList)
 
+var $router = useRouter()
 function jumpToComment() {
-  var $router = useRouter()
   $router.push({
-    name: 'comment', query: {
-      id: mind.id,
-    },
+    name: 'comment',
+    query: {
+      id: mind.id
+    }
   })
+}
+
+function deleteMind() {
+   axios.delete('/mind',{
+     params: {
+      id: mind.id
+    }
+   }).then(res => {
+     console.log(res)
+     if (res.data.code === 200) {
+       ElMessage.success('删除成功');
+       if (myMindList.value) {
+       for (var i = 0; i < myMindList.value.length; i++) {
+         if (myMindList.value[i].id === mind.id) {
+           myMindList.value.splice(i, 1)
+           break;
+         }
+        }
+       }
+     } else {
+      ElMessage.error('删除失败');
+     }
+   })
 }
 </script>
 
@@ -40,29 +70,66 @@ function jumpToComment() {
     <tr class="mind_row">
       <!-- 头像 -->
       <td width="24" valign="top">
-        <img :src="mind.userHeadImage" class="avatar" width="24" style="width: 40px; max-height: 40px" alt="zj9495" />
+        <img
+          :src="mind.userHeadImage"
+          class="avatar"
+          width="24"
+          style="width: 40px; max-height: 40px"
+          alt="zj9495"
+        />
       </td>
-      <td width="100%" valign="top" class="mind_content_col" @click="jumpToComment">
+      <td width="100%" valign="top" class="mind_content_col" >
         <div class="fr">
           <strong>{{ mind.accountName }}</strong>
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
-            <el-tag type="warning" class="comment-num">{{ mind.commentNum }}回复</el-tag>
+            <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
+            <el-popconfirm
+              title="确定要删除该项吗？"
+              confirmButtonText="确定"
+              cancelButtonText="取消"
+              icon="el-icon-warning"
+              iconColor="red"
+              @confirm="deleteMind"
+            >
+              <!-- 删除按钮，点击触发弹窗 -->
+              <template v-slot:reference>
+                <el-button
+                  v-if="Number(mind.userId) === Number(user.userId)"
+                  type="danger"
+                  :icon="Delete"
+                  circle
+                  size="small"
+                />
+              </template>
+            </el-popconfirm>
+
+            <el-button
+              v-if="Number(mind.userId) === Number(user.userId)"
+              type="info"
+              :icon="Edit"
+              circle
+              size="small"
+            />
           </span>
         </div>
         <div class="mind_content">
-          <span>{{ mind.content }} </span>
+          <span @click="jumpToComment">{{ mind.content }} </span>
         </div>
-    <tr class="mind_images_row">
-      <td class="mind_images" v-for="(item, index) in imageList" :key="index">
-        <div class="demo-image__preview">
-          <el-image style="width: 100px; height: 100px" :src="item" :preview-src-list="imageList"
-            :initial-index="index">
-          </el-image>
-        </div>
+        <tr class="mind_images_row">
+          <td class="mind_images" v-for="(item, index) in imageList" :key="index">
+            <div class="demo-image__preview">
+              <el-image
+                style="width: 100px; height: 100px"
+                :src="item"
+                :preview-src-list="imageList"
+                :initial-index="index"
+              >
+              </el-image>
+            </div>
+          </td>
+        </tr>
       </td>
-    </tr>
-    </td>
     </tr>
   </table>
 </template>
@@ -120,7 +187,6 @@ table {
 
 .mind_content :hover {
   color: #f5cb2b;
-  ;
 }
 
 .mind_content_tail {

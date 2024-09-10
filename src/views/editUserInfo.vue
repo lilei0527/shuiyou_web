@@ -41,10 +41,9 @@
       </div>
     </div>
     <div class="right-content">
-      <div class="cell">
-        <span>12dfdsfsdfsdfsdfsd</span>
-        <div>df11</div>
-      </div>
+        <el-card style="max-width: 100%; margin-top: 10px">
+          <span>请上传头像，大小不超过2MB<br>请填写用户名，长度在2到8个字符<br>请填写密码，长度在6到16个字符(不修改密码请留空)</span>
+      </el-card>
     </div>
   </div>
 </template>

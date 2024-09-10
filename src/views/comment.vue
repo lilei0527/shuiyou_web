@@ -88,17 +88,12 @@ const commentDialogVisible = ref(false)
 function report() {
   axios
     .post(
-      'http://localhost:8081/report',
+      '/report',
       {
         commentId: reportCommentId.value,
         type: reportRadio.value,
         content: reportText.value,
         toUserId: reportUserId.value
-      },
-      {
-        headers: {
-          Authorization: localStorage.getItem('token')
-        }
       }
     )
     .then((res) => {
@@ -196,7 +191,7 @@ const showLoginDialog = ref(false)
           <div @click="onCommentClick(0, mind.userId)">
             <span class="mind_operation_col">
               <img src="../assets/svg/comment.svg" style="width: 40px; max-height: 40px" alt="评论" />
-              <span class="mind_operation_text">{{ mind.commentNum }}</span>
+              <span class="mind_operation_text">回复</span>
             </span>
           </div>
 
@@ -204,11 +199,10 @@ const showLoginDialog = ref(false)
             <img src="../assets/svg/collect.svg" style="width: 40px; max-height: 40px" alt="关注" />
             <span class="mind_operation_text">关注</span>
           </span>
-          <span></span>
         </tr>
 
         <!-- 评论区 -->
-        <div class="comment" v-infinite-scroll="getCommentList" infinite-scroll-disabled="busy">
+        <div class="comment" v-infinite-scroll="getCommentList"  :infinite-scroll-disabled="busy">
           <div class="comment-title-row">
             <img src="../assets/svg/planlist.svg" style="width: 20px; max-height: 20px" alt="方案" /><span
               class="plan-name">方案列表</span>
@@ -248,10 +242,9 @@ const showLoginDialog = ref(false)
       </div>
     </div>
     <div class="right-content">
-      <div class="cell">
-        <span>12dfdsfsdfsdfsdfsd</span>
-        <div>df11</div>
-      </div>
+      <el-card style="max-width: 100%; margin-top: 10px">
+          <span>对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span>
+      </el-card>
     </div>
   </div>
 </template>
@@ -336,6 +329,7 @@ el-button {
   display: flex;
   align-items: center;
   margin-bottom: 30px;
+  margin-top: 30px;
 }
 
 .child-comment {
@@ -370,7 +364,7 @@ el-button {
 
 .mind_operation_row {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   margin-top: 20px;
 }
 

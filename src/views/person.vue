@@ -2,8 +2,9 @@
 import { ref } from 'vue'
 import type { TabsPaneContext } from 'element-plus'
 import Mind from './mind.vue';
-import axios from 'axios';
+import axios from '@/axios';
 import { user } from '../stores/global'
+import { t } from '@wangeditor/editor';
 
 const activeName = ref('my-mind')
 const size = "large";
@@ -12,96 +13,97 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
     console.log(tab, event)
 }
 
+const busy = ref(false)
 
 // 我的帖子
 const myMindList = ref<Array<any>>([]);
 var myMindPageNum = 1;
-async function loadMyMindMore() {
-    if(activeName.value!= "my-mind") return;
+async function loadMyMindMore(isFirst: boolean) {
+    if(!isFirst&&activeName.value!= "my-mind") return;
+    busy.value = true;
     const response =
-        await axios.get('http://localhost:8081/mind/getMyMind', {
-            headers: {
-                'Authorization': localStorage.getItem('token')
-            },
+        await axios.get('/mind/getMyMind', {
             params: {
                 pageNum: myMindPageNum,
                 pageSize: 10
             }
         });
-    const newItems = response.data.data.records;
+    const newItems = response.data.data==null?[]:response.data.data.records;
     if (newItems.length > 0) {
         myMindList.value.push(...newItems);
         myMindPageNum++;
     }
+    busy.value = false;
 };
+loadMyMindMore(true);
 
 //我的关注
 const myFollowList = ref<Array<any>>([]);
 var myFollowPageNum = 1;
-async function loadMyFollowMore() {
-    if(activeName.value!= "my-follow") return;
+async function loadMyFollowMore(isFirst: boolean) {
+    if(!isFirst&&activeName.value!= "my-follow") return;
+    busy.value = true;
     const response =
-        await axios.get('http://localhost:8081/follow/getMyFollow', {
-            headers: {
-                'Authorization': localStorage.getItem('token')
-            },
+        await axios.get('/follow/getMyFollow', {
             params: {
                 pageNum: myFollowPageNum,
                 pageSize: 10
             }
         });
-    const newItems = response.data.data.records;
+        const newItems = response.data.data==null?[]:response.data.data.records;
     if (newItems.length > 0) {
         myFollowList.value.push(...newItems);
         myFollowPageNum++;
     }
+    busy.value = false;
 };
+loadMyFollowMore(true);
 
 
 //我的回复
 const myReplyList = ref<Array<any>>([]);
 var myReplyPageNum = 1;
-async function loadMyReplyMore() {
-    if(activeName.value!= "my-reply") return;
+async function loadMyReplyMore(isFirst: boolean) {
+    if(!isFirst&&activeName.value!= "my-reply") return;
+    busy.value = true;
     const response =
-        await axios.get('http://localhost:8081/comment/getMyComments', {
-            headers: {
-                'Authorization': localStorage.getItem('token')
-            },
+        await axios.get('/comment/getMyComments', {
             params: {
                 pageNum: myReplyPageNum,
                 pageSize: 10
             }
         });
-    const newItems = response.data.data.records;
+        const newItems = response.data.data==null?[]:response.data.data.records;
     if (newItems.length > 0) {
         myReplyList.value.push(...newItems);
         myReplyPageNum++;
     }
+    busy.value = false;
 };
+loadMyReplyMore(true);
 
 
 //回复我的
 const replyMyList = ref<Array<any>>([]);
 var replyMyPageNum = 1;
-async function loadReplyMyMore() {
-    if(activeName.value!= "reply-my") return;
+async function loadReplyMyMore(isFirst: boolean) {
+    if(!isFirst&&activeName.value!= "reply-my") return;
+    busy.value = true;
     const response =
-        await axios.get('http://localhost:8081/comment/getCommentsToMe', {
-            headers: {
-                'Authorization': localStorage.getItem('token')
-            },
+        await axios.get('/comment/getCommentsToMe', {
             params: {
                 pageNum: replyMyPageNum,
                 pageSize: 10
             }
         });
-    const newItems = response.data.data.records;
+        const newItems = response.data.data==null?[]:response.data.data.records;
     if (newItems.length > 0) {
         replyMyList.value.push(...newItems);
         replyMyPageNum++;
     }
+    busy.value = false;
 };
+loadReplyMyMore(true);
 </script>
 
 <template>
@@ -115,23 +117,23 @@ async function loadReplyMyMore() {
                 </div>
 
                 <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-                    <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore">
+                    <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore" :infinite-scroll-disabled="busy">
                         <div v-if="myMindList.length > 0">
-                            <Mind v-for="(item, index) in myMindList" :key="index" :mind=item>
+                            <Mind v-for="(item, index) in myMindList" :key="index" :mind=item v-model:myMindList="myMindList">
                             </Mind>
                         </div>
                         <div v-if="myMindList.length == 0">
                             <el-empty description="暂无数据" />
                         </div>
                     </el-tab-pane>
-                    <el-tab-pane label="我的关注" name="my-follow" v-infinite-scroll="loadMyFollowMore">
+                    <el-tab-pane label="我的关注" name="my-follow" v-infinite-scroll="loadMyFollowMore" :infinite-scroll-disabled="busy">
                         <div v-if="myFollowList.length == 0">
                             <el-empty description="暂无数据" />
                         </div>
                         <Mind v-for="(item, index) in myFollowList" :key="index" :mind=item>
                         </Mind>
                     </el-tab-pane>
-                    <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore">
+                    <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore" :infinite-scroll-disabled="busy">
                         <div v-for="(item, index) in myReplyList" :key="index">
                             <div class="mind-content">
                                 <div>{{ item.mindContent }}</div>
@@ -149,7 +151,7 @@ async function loadReplyMyMore() {
                             <el-empty description="暂无数据" />
                         </div>
                     </el-tab-pane>
-                    <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore">
+                    <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore" :infinite-scroll-disabled="busy">
                         <div v-for="(item, index) in replyMyList" :key="index">
                             <div class="mind-content">{{ item.mindContent }}</div>
                             <div class="user-header">

@@ -129,6 +129,9 @@ const submitComment = () => {
         return
     }
 
+    //清空输入框
+    valueHtml.value = ''
+
     var commentId;
     if (props.commentId == 0) {
         commentId = null
@@ -149,6 +152,7 @@ const submitComment = () => {
         if (commentList.value) {
             if (props.commentId == 0) {
                 //评论帖子
+                response.data.data.childComments = []
                 commentList.value.unshift(response.data.data)
             } else {
                 for (let i = 0; i < commentList.value.length; i++) {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Mind from './mind.vue'
-import { ref, type Ref } from 'vue'
-import axios from 'axios'
+import { ref } from 'vue'
+import axios from '@/axios'
 
 const centerDialogVisible = ref(false)
 const radio = ref(3)
@@ -20,11 +20,13 @@ interface type {
   name: string
 }
 
+
+
 //类型
 const typeList: any = ref(null)
 const fetchType = async () => {
   try {
-    const response = await axios.get('http://localhost:8081/type/getAll')
+    const response = await axios.get('/type/getAll')
     response.data.data
     var data = response.data.data as type[]
     data.unshift({ id: 0, name: '全部' })
@@ -39,7 +41,7 @@ fetchType()
 const mindList: any = ref(null)
 const fetchMind = async (pageNum: number, pageSize: number) => {
   try {
-    const response = await axios.get('http://localhost:8081/mind/selectAll', {
+    const response = await axios.get('/mind/selectAll', {
       params: {
         current: pageNum,
         size: pageSize,
@@ -76,10 +78,7 @@ const handleCurrentChange = (val: number) => {
   scrollToTop()
 }
 
-const activeNames = ref(['1'])
-const handleChange = (val: string[]) => {
-  console.log(val)
-}
+
 
 const $router = useRouter()
 
@@ -149,30 +148,11 @@ function onPublishClick() {
       </el-button>
 
       <el-card style="max-width: 100%; margin-top: 20px" class="rule">
-        <!-- <p class="rule-title">社区规则</p> -->
-        <el-collapse v-model="activeNames" @change="handleChange">
-          <el-collapse-item title="社区规则" name="1" class="rule-title">
-            <p class="rule-content">
-              欢迎来到我们的社区！为了确保每个人都能在这里愉快地交流和分享，我们制定了以下规则：<br /><br />
-              1.
-              尊重他人：请尊重其他成员的观点、意见和感受。避免使用侮辱性、歧视性或攻击性的语言。<br />
-              2.
-              遵守法律和道德规范：请遵守国家法律法规以及社会道德准则，不传播违法信息、色情内容或其他有害信息。<br />
-              3. 保持友善和礼貌：请友好地对待其他成员，避免恶意评论、挑衅或侮辱行为。<br />
-              4. 保护隐私：请勿泄露他人的个人信息，包括姓名、地址、电话号码等敏感信息。<br />
-              5. 禁止广告和垃圾信息：请不要发布广告、垃圾邮件或未经授权的商业宣传信息。<br />
-              6. 负责任的讨论：请在讨论中保持理性和客观，避免人身攻击和过度情绪化的言辞。<br />
-              7.
-              遵守版权法：请勿上传、分享或传播侵犯他人知识产权的内容，如盗版软件、音乐、电影等。<br />
-              8. 不得散布谣言：不要散播未经证实的消息或谣言，以免误导他人。<br />
-              9. 鼓励互助和支持：请积极参与社区活动，互相帮助解决问题，共同进步。<br />
-              10.
-              举报违规行为：如果您发现任何违反社区规则的行为，请及时向管理员举报，我们将尽快处理。<br /><br />
+          <span>本社区为个人求购信息交流平台，个人发布的求购信息仅供参考，双方交易需谨慎协商，以双方自愿为原则。</span>
+      </el-card>
 
-              我们希望每位成员都能遵守这些规则，共同营造一个和谐、友好的社区环境。感谢您的理解和支持！
-            </p>
-          </el-collapse-item>
-        </el-collapse>
+      <el-card style="max-width: 100%; margin-top: 20px" class="rule">
+        <span>为了维护社区秩序，请遵守社区规定，不得发布违法或不道德的求购信息。被举报后并核实后，将永久封号</span>
       </el-card>
     </div>
   </div>

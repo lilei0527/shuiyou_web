@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import axios from 'axios'
+import axios from '@/axios'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { reactive, ref } from 'vue'
 import { user } from '../stores/global' 
@@ -10,7 +10,7 @@ const isLoginDialogVisible = defineModel<boolean>('isLoginDialogVisible')
 const isRegisterDialogVisible = defineModel<boolean>('isRegisterDialogVisible')
 
 function login() {
-  axios.post('http://localhost:8081/user/login', loginForm).then((response) => {
+  axios.post('/user/login', loginForm).then((response) => {
     if (response.data.code != 200) {
       ElMessage.error(response.data.message)
       return
@@ -19,9 +19,11 @@ function login() {
       localStorage.setItem('token', userData.token)
       localStorage.setItem('accountName',userData.accountName)
       localStorage.setItem('headImage',userData.headImage)
+      localStorage.setItem('userId',userData.userId)
       user.accountName = userData.accountName
       user.headImage = userData.headImage
       user.token = userData.token
+      user.userId = userData.userId
       isLoginDialogVisible.value = false
     }
   })
@@ -34,7 +36,7 @@ function register() {
     return
   }
 
-  axios.post('http://localhost:8081/user/register', registerForm).then((response) => {
+  axios.post('/user/register', registerForm).then((response) => {
     if (response.data.code != 200) {
       ElMessage.error(response.data.message)
       return

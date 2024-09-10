@@ -4,7 +4,6 @@ import { ref } from 'vue'
 import { ElMessage, type FormInstance, type UploadProps, type UploadUserFile } from 'element-plus'
 import axios from '@/axios'
 import { Plus } from '@element-plus/icons-vue'
-import router from '@/router'
 import { useRouter } from 'vue-router'
 
 const dialogImageUrl = ref('')
@@ -198,10 +197,9 @@ const rules = {
       </el-form>
     </div>
     <div class="right-content">
-      <div class="cell">
-        <span>12dfdsfsdfsdfsdfsd</span>
-        <div>df11</div>
-      </div>
+      <el-card style="max-width: 100%; margin-top: 10px">
+              <span>发布求购信息时，建议提供详细的物品名称、数量、单价、联系方式等信息，以便卖家更快的与您联系。</span>
+      </el-card>
     </div>
   </div>
 </template>
