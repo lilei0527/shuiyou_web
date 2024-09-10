@@ -44,7 +44,7 @@ const toolbarConfig = {
     excludeKeys: ['group-video', 'insertTable']
 }
 
-var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
+var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
 
 const editorConfig = {
     placeholder: '请输入内容...',
@@ -130,8 +130,7 @@ const submitComment = () => {
         return
     }
 
-    //清空输入框
-    valueHtml.value = ''
+    
 
     var commentId;
     if (props.commentId == 0) {
@@ -175,6 +174,9 @@ const submitComment = () => {
     }).catch(function (error) {
         console.log(error)
     })
+
+    //清空输入框
+    valueHtml.value = ''
 }
 </script>
 

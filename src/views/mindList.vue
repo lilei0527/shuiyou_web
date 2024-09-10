@@ -123,7 +123,7 @@ function onPublishClick() {
       <!-- 帖子列表 -->
 
       <Mind v-for="(item, index) in mindList" :key="index" :mind="item"> </Mind>
-      <div v-if="mindList.length == 0">
+      <div v-if="mindList&&mindList.length == 0">
         <el-empty description="更多的帖子正在等待发布" />
       </div>
       <!-- 分页 -->

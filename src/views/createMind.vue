@@ -4,7 +4,9 @@ import { ref } from 'vue'
 import { ElMessage, type FormInstance, type UploadProps, type UploadUserFile } from 'element-plus'
 import axios from '@/axios'
 import { Plus } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import router from '@/router'
+import { el } from 'element-plus/es/locales.mjs'
 
 const dialogImageUrl = ref('')
 const dialogVisible = ref(false)
@@ -84,10 +86,58 @@ const headers = {
 }
 
 // do not use same name with ref
+
+
+const route = useRoute()
+const mindId = route.query.mindId
+var mind : Mind;
+
+interface Mind {
+  id: number
+  userId: number
+  accountName: string
+  content: string
+  images: string
+  createTime: string
+  commentNum: number
+  userHeadImage: string
+  typeId: number
+}
+
 const form = reactive({
-  type: 1,
+  type: 1, 
   desc: ''
-})
+});
+//帖子详情
+const getMind = () => {
+  var response = axios.get('mind/detail', {
+    params: {
+      id: mindId
+    }
+  })
+
+  response.then(function (response) {
+    mind = response.data.data
+    form.type = mind.typeId
+    form.desc = mind.content
+    if (mind.images!=null&&mind.images!='') {
+      mind.images.split(';').forEach((url) => {
+      fileList.value.push({
+        name: 'image.jpg',
+        url: url,
+        status: 'success'
+      });
+    })
+    }
+  })
+}
+
+if (mindId&&mindId!=null) {
+  getMind()
+}
+
+const isDisabled = mindId!=null
+
 
 const onSubmit = async () => {
   var imageUrls = ''
@@ -95,18 +145,23 @@ const onSubmit = async () => {
     if (file.response && (file.response as { data: unknown }).data) {
       var url = (file.response as { data: string }).data
       imageUrls += (url + ';')
+    }else {
+      imageUrls += (file.url + ';')
     }
   })
   //去掉最后一个分号
   imageUrls = imageUrls.slice(0, -1)
 
   var response = await axios.post('/mind', {
+    id:mindId,
     typeId: form.type,
     content: form.desc,
     images: imageUrls
   })
   ElMessage.success('发布成功')
-  $router.push('/minds')
+  //返回路由
+  router.back();
+  // $router.push('/minds')
 }
 
 //类型
@@ -125,10 +180,10 @@ const fetchType = async () => {
 }
 fetchType()
 
-const $router = useRouter()
+
 function onCancel() {
   //回到上一级页面
-  $router.go(-1);
+  router.back();
 }
 
 const isFormValid = ref(false) // 表单是否验证通过
@@ -152,7 +207,7 @@ const rules = {
   ]
 }
 
-var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
+var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
 </script>
 
 <template>
@@ -160,7 +215,7 @@ var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
     <div class="main-content">
       <el-form :model="form" label-width="auto" style="max-width: 100%" :rules="rules" ref="ruleFormRef" @input="handleInput">
         <el-form-item label="分类" prop="type">
-          <el-radio-group v-model="form.type">
+          <el-radio-group v-model="form.type" :disabled="isDisabled">
             <el-radio v-for="(item, index) in typeList" :key="index" :value="item.id">{{
               item.name
             }}</el-radio>
@@ -168,7 +223,7 @@ var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
         </el-form-item>
 
         <el-form-item label="求购描述" prop="desc">
-          <el-input v-model="form.desc" type="textarea" rows="10" />
+          <el-input v-model="form.desc" type="textarea" rows=10 />
         </el-form-item>
 
         <el-form-item label="上传图片">
@@ -187,10 +242,6 @@ var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
             <img w-full :src="dialogImageUrl" alt="Preview Image" />
           </el-dialog>
         </el-form-item>
-
-        <el-dialog v-model="dialogVisible">
-          <img w-full :src="dialogImageUrl" alt="Preview Image" />
-        </el-dialog>
 
         <el-form-item>
           <el-button @click="onCancel">取消</el-button>

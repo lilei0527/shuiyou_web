@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { defineProps } from 'vue'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Delete, Edit } from '@element-plus/icons-vue'
 import { user } from '@/stores/global'
 import axios from '@/axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
 
 interface Mind {
   id: number
@@ -27,7 +28,7 @@ const myMindList = defineModel<Array<any>>('myMindList')
 
 var imgUrlList: String[] = []
 if (mind && mind.images != null && mind.images != '') {
-  imgUrlList = mind.images.split(',')
+  imgUrlList = mind.images.split(';')
 }
 const imageList = ref(imgUrlList)
 
@@ -63,6 +64,10 @@ function deleteMind() {
      }
    })
 }
+
+// 判断是否为个人主页
+const route = useRoute();
+const isPersonPage = route.path === '/person'
 </script>
 
 <template>
@@ -84,7 +89,7 @@ function deleteMind() {
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
             <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
-            <el-popconfirm
+            <el-popconfirm v-if="isPersonPage"
               title="确定要删除该项吗？"
               confirmButtonText="确定"
               cancelButtonText="取消"
@@ -94,8 +99,7 @@ function deleteMind() {
             >
               <!-- 删除按钮，点击触发弹窗 -->
               <template v-slot:reference>
-                <el-button
-                  v-if="Number(mind.userId) === Number(user.userId)"
+                <el-button class="delete-btn"
                   type="danger"
                   :icon="Delete"
                   circle
@@ -105,11 +109,12 @@ function deleteMind() {
             </el-popconfirm>
 
             <el-button
-              v-if="Number(mind.userId) === Number(user.userId)"
+              v-if="isPersonPage"
               type="info"
               :icon="Edit"
               circle
               size="small"
+              @click="$router.push({ name: 'create_mind', query: { mindId: mind.id } })"
             />
           </span>
         </div>
@@ -193,5 +198,9 @@ table {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.delete-btn{
+  margin-left: 12px;
 }
 </style>

@@ -5,7 +5,7 @@ import Mind from './mind.vue'
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
-// import CommentDialog from '../components/commentDialog.vue'
+import CommentDialog from '../components/CommentDialog.vue'
 
 const route = useRoute()
 var mindId = Number(route.query.id);

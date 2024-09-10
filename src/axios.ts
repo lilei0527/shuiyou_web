@@ -1,10 +1,13 @@
 // src/axios.js
 import axios from 'axios';
 
+const apiBaseUrl = import.meta.env.VITE_API_URL;
+
+
 // 创建 axios 实例并配置基础 URL
 const instance = axios.create({
   // baseURL: 'http://localhost:8081',  // 使用环境变量或直接配置
-  baseURL: import.meta.env.BASE_URL,  // 使用环境变量
+  baseURL: apiBaseUrl,  // 使用环境变量
   timeout: 5000  // 超时时间
 });
 

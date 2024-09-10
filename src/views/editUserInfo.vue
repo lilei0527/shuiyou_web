@@ -133,7 +133,7 @@ function handleInput() {
   }
 }
 
-var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
+var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
 
 </script>
 
