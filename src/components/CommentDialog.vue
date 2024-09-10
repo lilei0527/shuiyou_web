@@ -44,13 +44,14 @@ const toolbarConfig = {
     excludeKeys: ['group-video', 'insertTable']
 }
 
+var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
 
 const editorConfig = {
     placeholder: '请输入内容...',
     MENU_CONF: {
         uploadImage: {
             maxFileSize: 2 * 1024 * 1024,
-            server: 'http://123.60.87.243:8080/file/upload', // 上传图片的服务器地址
+            server: uploadUrl, // 上传图片的服务器地址
             fieldName: 'file', // 上传图片的字段名
             headers: {
                 Authorization: localStorage.getItem('token')

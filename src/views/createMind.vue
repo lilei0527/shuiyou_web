@@ -4,7 +4,6 @@ import { ref } from 'vue'
 import { ElMessage, type FormInstance, type UploadProps, type UploadUserFile } from 'element-plus'
 import axios from '@/axios'
 import { Plus } from '@element-plus/icons-vue'
-import router from '@/router'
 import { useRouter } from 'vue-router'
 
 const dialogImageUrl = ref('')
@@ -152,6 +151,8 @@ const rules = {
     { required: true, message: '请填写求购描述', trigger: 'blur' }
   ]
 }
+
+var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
 </script>
 
 <template>
@@ -172,7 +173,7 @@ const rules = {
 
         <el-form-item label="上传图片">
           <el-upload
-            action="http://123.60.87.243:8080/file/upload"
+            :action="uploadUrl"
             :headers="headers"
             v-model:file-list="fileList"
             list-type="picture-card"

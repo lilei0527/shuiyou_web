@@ -7,14 +7,14 @@
           <el-form-item label="用户头像" prop="headImage">
             <el-upload
               class="avatar-uploader"
-              action="http://123.60.87.243:8080/file/upload"
+              :action="uploadUrl"
               :headers="headers"
               name="file"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
               :before-upload="beforeAvatarUpload"
             >
-              <img v-if="user.headImage !== ''" :src="user.headImage" class="avatar" />
+              <img v-if="user.headImage&&user.headImage !== ''" :src="user.headImage" class="avatar" />
               <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
             </el-upload>
           </el-form-item>
@@ -133,6 +133,8 @@ function handleInput() {
     });
   }
 }
+
+var uploadUrl = import.meta.env.BASE_URL+"/file/upload"
 
 </script>
 

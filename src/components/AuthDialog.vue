@@ -10,7 +10,7 @@ const isLoginDialogVisible = defineModel<boolean>('isLoginDialogVisible')
 const isRegisterDialogVisible = defineModel<boolean>('isRegisterDialogVisible')
 
 function login() {
-  axios.post('http://localhost:8081/user/login', loginForm).then((response) => {
+  axios.post(import.meta.env.BASE_URL+ '/user/login', loginForm).then((response) => {
     if (response.data.code != 200) {
       ElMessage.error(response.data.message)
       return
