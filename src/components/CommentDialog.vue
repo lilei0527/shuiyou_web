@@ -5,10 +5,12 @@ import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import Compressor from 'compressorjs'
 import { ElMessage } from 'element-plus';
+import { de } from 'element-plus/es/locales.mjs';
+import router from '@/router';
+import { useRoute } from 'vue-router';
 
 
 const editorRef = shallowRef()
-const valueHtml = ref('')
 const editor = editorRef.value
 
 onBeforeUnmount(() => {
@@ -20,7 +22,7 @@ const handleCreated = (editor: any) => {
     editorRef.value = editor // 记录 editor 实例，重要！
 }
 const handleChange = (editor: { getHtml: () => any }) => {
-    valueHtml.value = editor.getHtml()
+    commentValue.value = editor.getHtml()
     console.log('change:', editor.getHtml())
 }
 const handleDestroyed = (editor: any) => {
@@ -44,7 +46,7 @@ const toolbarConfig = {
     excludeKeys: ['group-video', 'insertTable']
 }
 
-var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
+var uploadUrl = import.meta.env.VITE_IMAGE_URL + "/file/upload"
 
 const editorConfig = {
     placeholder: '请输入内容...',
@@ -111,26 +113,31 @@ interface Comment {
     createTime: string
     childComments: Array<Comment>
 }
+
 const commentDialogVisible = defineModel<boolean>('commentDialogVisible')
 const commentList = defineModel<Array<Comment>>('commentList')
 const mind = defineModel<any>('mind')
+const commentValue = defineModel<string>('commentValue')//待编辑的评论
+
 
 const props = defineProps<{
-    mindId: number,
-    toUserId: number
-    commentId: number | null
+    id?: number,
+    mindId?: number,
+    toUserId?: number,
+    commentId?: number | null
 }>()
+
 
 
 //提交评论
 const submitComment = () => {
     //是否输入内容
-    if (valueHtml.value.trim() == '<p><br></p>') {
+    if (commentValue.value!.trim() == '<p><br></p>') {
         ElMessage.error("请输入回复内容")
         return
     }
 
-    
+
 
     var commentId;
     if (props.commentId == 0) {
@@ -141,7 +148,8 @@ const submitComment = () => {
 
     // 发送请求
     var response = axios.post('/comment', {
-        content: valueHtml.value,
+        id: props.id,
+        content: commentValue.value,
         mindId: props.mindId,
         toUserId: props.toUserId,
         commentId: commentId
@@ -175,8 +183,11 @@ const submitComment = () => {
         console.log(error)
     })
 
-    //清空输入框
-    valueHtml.value = ''
+    //清空输入框    在主页编辑的时候不清除
+    const route = useRoute();
+    if (route.path != '/person') {
+        commentValue.value = ''
+    }
 }
 </script>
 
@@ -184,9 +195,10 @@ const submitComment = () => {
     <el-dialog v-model="commentDialogVisible" title="评论" width="800px" center>
         <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" :mode="mode"
             style="border-bottom: 1px solid #ccc" />
-        <Editor :defaultConfig="editorConfig" :mode="mode" v-model="valueHtml" style="height: 500px; overflow-y: hidden"
-            @onCreated="handleCreated" @onChange="handleChange" @onDestroyed="handleDestroyed" @onFocus="handleFocus"
-            @onBlur="handleBlur" @customAlert="customAlert" @customPaste="customPaste" />
+        <Editor :defaultConfig="editorConfig" :mode="mode" v-model="commentValue"
+            style="height: 500px; overflow-y: hidden" @onCreated="handleCreated" @onChange="handleChange"
+            @onDestroyed="handleDestroyed" @onFocus="handleFocus" @onBlur="handleBlur" @customAlert="customAlert"
+            @customPaste="customPaste" />
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="commentDialogVisible = false">取消</el-button>

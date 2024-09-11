@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { TabsPaneContext } from 'element-plus'
 import Mind from './mind.vue';
 import axios from '@/axios';
 import { user } from '../stores/global'
-import { t } from '@wangeditor/editor';
+import { Edit, Delete } from '@element-plus/icons-vue';
+import CommentDialog from '../components/CommentDialog.vue';
 
 const activeName = ref('my-mind')
 const size = "large";
@@ -17,9 +18,11 @@ const busy = ref(false)
 
 // 我的帖子
 const myMindList = ref<Array<any>>([]);
+myMindList.value = myMindList.value.filter(item => item.isDeleted != 1);
+
 var myMindPageNum = 1;
 async function loadMyMindMore(isFirst: boolean) {
-    if(!isFirst&&activeName.value!= "my-mind") return;
+    if (!isFirst && activeName.value != "my-mind") return;
     busy.value = true;
     const response =
         await axios.get('/mind/getMyMind', {
@@ -28,7 +31,7 @@ async function loadMyMindMore(isFirst: boolean) {
                 pageSize: 10
             }
         });
-    const newItems = response.data.data==null?[]:response.data.data.records;
+    const newItems = response.data.data == null ? [] : response.data.data.records;
     if (newItems.length > 0) {
         myMindList.value.push(...newItems);
         myMindPageNum++;
@@ -41,7 +44,7 @@ loadMyMindMore(true);
 const myFollowList = ref<Array<any>>([]);
 var myFollowPageNum = 1;
 async function loadMyFollowMore(isFirst: boolean) {
-    if(!isFirst&&activeName.value!= "my-follow") return;
+    if (!isFirst && activeName.value != "my-follow") return;
     busy.value = true;
     const response =
         await axios.get('/follow/getMyFollow', {
@@ -50,7 +53,7 @@ async function loadMyFollowMore(isFirst: boolean) {
                 pageSize: 10
             }
         });
-        const newItems = response.data.data==null?[]:response.data.data.records;
+    const newItems = response.data.data == null ? [] : response.data.data.records;
     if (newItems.length > 0) {
         myFollowList.value.push(...newItems);
         myFollowPageNum++;
@@ -64,7 +67,7 @@ loadMyFollowMore(true);
 const myReplyList = ref<Array<any>>([]);
 var myReplyPageNum = 1;
 async function loadMyReplyMore(isFirst: boolean) {
-    if(!isFirst&&activeName.value!= "my-reply") return;
+    if (!isFirst && activeName.value != "my-reply") return;
     busy.value = true;
     const response =
         await axios.get('/comment/getMyComments', {
@@ -73,7 +76,7 @@ async function loadMyReplyMore(isFirst: boolean) {
                 pageSize: 10
             }
         });
-        const newItems = response.data.data==null?[]:response.data.data.records;
+    const newItems = response.data.data == null ? [] : response.data.data.records;
     if (newItems.length > 0) {
         myReplyList.value.push(...newItems);
         myReplyPageNum++;
@@ -87,7 +90,7 @@ loadMyReplyMore(true);
 const replyMyList = ref<Array<any>>([]);
 var replyMyPageNum = 1;
 async function loadReplyMyMore(isFirst: boolean) {
-    if(!isFirst&&activeName.value!= "reply-my") return;
+    if (!isFirst && activeName.value != "reply-my") return;
     busy.value = true;
     const response =
         await axios.get('/comment/getCommentsToMe', {
@@ -96,7 +99,7 @@ async function loadReplyMyMore(isFirst: boolean) {
                 pageSize: 10
             }
         });
-        const newItems = response.data.data==null?[]:response.data.data.records;
+    const newItems = response.data.data == null ? [] : response.data.data.records;
     if (newItems.length > 0) {
         replyMyList.value.push(...newItems);
         replyMyPageNum++;
@@ -104,9 +107,60 @@ async function loadReplyMyMore(isFirst: boolean) {
     busy.value = false;
 };
 loadReplyMyMore(true);
+
+const deleteComment = async (commentId: number) => {
+    const response = await axios.delete('/comment', {
+        params: {
+            id: commentId
+        }
+    });
+    if (response.data.code == 200) {
+        const index = myReplyList.value.findIndex(item => item.id == commentId);
+        if (index > -1) {
+            myReplyList.value.splice(index, 1);
+        }
+    }
+}
+
+const commentDialogVisible = ref(false);
+const id = ref(0); // 评论id
+const commentValue = ref('');
+
+interface Comment {
+    id: number
+    mindId: number
+    commentId: number
+    fromUserId: number
+    fromUserName: string
+    fromUserHeadImage: string
+    toUserId: number
+    toUserName: string
+    toUserHeadImage: string
+    content: string
+    createTime: string
+    childComments: Array<Comment>
+}
+
+function onEdit(commentParam: Comment) {
+    id.value = commentParam.id;
+    commentValue.value = commentParam.content;
+    commentDialogVisible.value = true;
+    commentParam.content = commentValue.value;
+}
+
+watch(commentValue, (newVal) => {
+    if (id.value > 0 && newVal != '') {
+        const index = myReplyList.value.findIndex(item => item.id == id.value);
+        if (index > -1) {
+            myReplyList.value[index].content = newVal;
+        }
+    }
+});
 </script>
 
 <template>
+    <CommentDialog v-model:commentDialogVisible="commentDialogVisible" v-model:commentValue="commentValue" :id="id" />
+
     <div class="my-content">
         <div class="main-content">
             <div class="12">
@@ -117,24 +171,28 @@ loadReplyMyMore(true);
                 </div>
 
                 <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-                    <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore" :infinite-scroll-disabled="busy">
+                    <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore"
+                        :infinite-scroll-disabled="busy">
                         <div v-if="myMindList.length > 0">
-                            <Mind v-for="(item, index) in myMindList" :key="index" :mind=item v-model:myMindList="myMindList">
+                            <Mind v-for="(item,) in myMindList" :key="item.id" :mind=item
+                                v-model:myMindList="myMindList">
                             </Mind>
                         </div>
                         <div v-if="myMindList.length == 0">
                             <el-empty description="暂无数据" />
                         </div>
                     </el-tab-pane>
-                    <el-tab-pane label="我的关注" name="my-follow" v-infinite-scroll="loadMyFollowMore" :infinite-scroll-disabled="busy">
+                    <el-tab-pane label="我的关注" name="my-follow" v-infinite-scroll="loadMyFollowMore"
+                        :infinite-scroll-disabled="busy">
                         <div v-if="myFollowList.length == 0">
                             <el-empty description="暂无数据" />
                         </div>
                         <Mind v-for="(item, index) in myFollowList" :key="index" :mind=item>
                         </Mind>
                     </el-tab-pane>
-                    <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore" :infinite-scroll-disabled="busy">
-                        <div v-for="(item, index) in myReplyList" :key="index">
+                    <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore"
+                        :infinite-scroll-disabled="busy">
+                        <div v-for="(item) in myReplyList" :key="item.id">
                             <div class="mind-content">
                                 <div>{{ item.mindContent }}</div>
                             </div>
@@ -142,16 +200,29 @@ loadReplyMyMore(true);
                                 <img :src="item.fromUserHeadImage" alt="" style="width: 40px; max-height: 40px;" />
                                 <span class="user-name">{{ item.fromUserName }}</span>
                                 <span class="time">{{ item.createTime }}</span>
+                                <!-- 删除按钮，点击触发弹窗 -->
+                                <el-popconfirm title="确定要删除该项吗？" confirmButtonText="确定" cancelButtonText="取消"
+                                    icon="el-icon-warning" iconColor="red" @confirm="deleteComment(item.id)">
+                                    <template v-slot:reference>
+                                        <el-button class="delete-btn" type="danger" :icon="Delete" circle
+                                            size="small" />
+                                    </template>
+                                </el-popconfirm>
+
+                                <el-button type="info" :icon="Edit" circle size="small" @click="onEdit(item)" />
                             </div>
                             <div v-html="item.content" class="user-content">
                             </div>
+
+
                             <hr class="comment-line" />
                         </div>
                         <div v-if="myReplyList.length == 0">
                             <el-empty description="暂无数据" />
                         </div>
                     </el-tab-pane>
-                    <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore" :infinite-scroll-disabled="busy">
+                    <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore"
+                        :infinite-scroll-disabled="busy">
                         <div v-for="(item, index) in replyMyList" :key="index">
                             <div class="mind-content">{{ item.mindContent }}</div>
                             <div class="user-header">
@@ -243,5 +314,9 @@ loadReplyMyMore(true);
 
 .mind-content {
     margin-top: 20px;
+}
+
+.delete-btn {
+    margin-left: 12px;
 }
 </style>
