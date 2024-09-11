@@ -8,22 +8,22 @@ import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import CommentDialog from '../components/CommentDialog.vue'
 
 const route = useRoute()
-var mindId = Number(route.query.id);
+var mindId = Number(route.query.id)
 const mind = ref<any>()
 
 interface Comment {
-  id: number
-  mindId: number
-  commentId: number
-  fromUserId: number
-  fromUserName: string
-  fromUserHeadImage: string
-  toUserId: number
-  toUserName: string
-  toUserHeadImage: string
-  content: string
-  createTime: string
-  childComments: Array<Comment>
+  id?: number
+  mindId?: number
+  commentId?: number
+  fromUserId?: number
+  fromUserName?: string
+  fromUserHeadImage?: string
+  toUserId?: number
+  toUserName?: string
+  toUserHeadImage?: string
+  content?: string
+  createTime?: string
+  childComments?: Array<Comment>
 }
 
 //帖子详情
@@ -79,23 +79,22 @@ const reportRadio = ref(3)
 const reportText = ref('')
 const reportUserId = ref(0)
 const reportCommentId = ref(0)
-const commentUserId = ref(0)
-const commentCId = ref(0) //根评论id
+
+// const commentUserId = ref(0)
+// const commentCId = ref(0) //根评论id
+
 const reportDialogVisible = ref(false)
 const commentDialogVisible = ref(false)
 
 //举报评论
 function report() {
   axios
-    .post(
-      '/report',
-      {
-        commentId: reportCommentId.value,
-        type: reportRadio.value,
-        content: reportText.value,
-        toUserId: reportUserId.value
-      }
-    )
+    .post('/report', {
+      commentId: reportCommentId.value,
+      type: reportRadio.value,
+      content: reportText.value,
+      toUserId: reportUserId.value
+    })
     .then((res) => {
       console.log(res)
       ElMessage({
@@ -108,6 +107,7 @@ function report() {
   reportDialogVisible.value = false
 }
 
+const comment = ref<Comment>()
 
 function onReportClick(commentId: number, userId: number) {
   //判断是否已登录
@@ -129,11 +129,38 @@ function onCommentClick(commentId: number, userId: number) {
     return
   }
 
-  commentUserId.value = userId
-  commentCId.value = commentId
+  comment.value = {
+    mindId: mindId,
+    commentId: commentId,
+    toUserId: userId
+  }
   commentDialogVisible.value = true
 }
 
+function afterSaveComment(comment: Comment) {
+  if (commentList.value) {
+    if (comment.commentId == null) {
+      //评论帖子
+      comment.childComments = []
+      commentList.value.unshift(comment)
+    } else {
+      for (let i = 0; i < commentList.value.length; i++) {
+        //回复评论
+        if (commentList.value[i].id === comment.commentId) {
+          commentList.value[i].childComments!.push(comment)
+          break
+        }
+      }
+    }
+  }
+
+  if (mind.value) {
+    if (mind.value.commentNum === null) {
+      mind.value.commentNum = 0
+    }
+    mind.value.commentNum += 1
+  }
+}
 
 //关注帖子
 function follow(mindId: number) {
@@ -143,17 +170,17 @@ function follow(mindId: number) {
   })
 }
 
-
 const busy = ref(false)
 const showLoginDialog = ref(false)
 </script>
 
-
-
 <template>
   <!-- <AuthDialog v-model:isLoginDialogVisible="isLogin" /> -->
-  <CommentDialog v-model:commentDialogVisible="commentDialogVisible" v-model:commentList="commentList"
-    v-model:mind="mind" :mindId="mindId" :toUserId="commentUserId" :commentId="commentCId" />
+  <CommentDialog
+    v-if="commentDialogVisible && comment"
+    :comment="comment"
+    @afterSaveComment="afterSaveComment"
+  />
 
   <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
     <el-radio-group v-model="reportRadio" size="large">
@@ -174,12 +201,9 @@ const showLoginDialog = ref(false)
     </template>
   </el-dialog>
 
-
-
   <div class="my-content">
     <div class="main-content">
       <div class="edior">
-
         <Mind :mind="mind" v-if="mind" />
 
         <!-- 操作栏 -->
@@ -190,7 +214,11 @@ const showLoginDialog = ref(false)
           </span>
           <div @click="onCommentClick(0, mind.userId)">
             <span class="mind_operation_col">
-              <img src="../assets/svg/comment.svg" style="width: 40px; max-height: 40px" alt="评论" />
+              <img
+                src="../assets/svg/comment.svg"
+                style="width: 40px; max-height: 40px"
+                alt="评论"
+              />
               <span class="mind_operation_text">回复</span>
             </span>
           </div>
@@ -202,10 +230,13 @@ const showLoginDialog = ref(false)
         </tr>
 
         <!-- 评论区 -->
-        <div class="comment" v-infinite-scroll="getCommentList"  :infinite-scroll-disabled="busy">
+        <div class="comment" v-infinite-scroll="getCommentList" :infinite-scroll-disabled="busy">
           <div class="comment-title-row">
-            <img src="../assets/svg/planlist.svg" style="width: 20px; max-height: 20px" alt="方案" /><span
-              class="plan-name">方案列表</span>
+            <img
+              src="../assets/svg/planlist.svg"
+              style="width: 20px; max-height: 20px"
+              alt="方案"
+            /><span class="plan-name">方案列表</span>
           </div>
           <div v-for="(item, index) in commentList" :key="index">
             <el-card>
@@ -215,22 +246,42 @@ const showLoginDialog = ref(false)
                 <span class="time">{{ item.createTime }}</span>
               </div>
               <div v-html="item.content" class="user-content"></div>
-              <span class="report-operate" @click="onReportClick(item.id, item.fromUserId)">举报</span><span
-                class="reply-operate" @click="onCommentClick(item.id, item.fromUserId)">回复</span>
+              <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)"
+                >举报</span
+              ><span class="reply-operate" @click="onCommentClick(item.id!, item.fromUserId!)"
+                >回复</span
+              >
               <!-- <hr class="comment-line" /> -->
 
               <!-- 子评论 -->
-              <div class="child-comment" v-for="(childItem, index) in item.childComments" :key="index">
+              <div
+                class="child-comment"
+                v-for="(childItem, index) in item.childComments"
+                :key="index"
+              >
                 <div class="user-header">
-                  <img :src="childItem.fromUserHeadImage" alt="" style="width: 30px; max-height: 30px" />
+                  <img
+                    :src="childItem.fromUserHeadImage"
+                    alt=""
+                    style="width: 30px; max-height: 30px"
+                  />
                   <span class="user-name">{{ childItem.fromUserName }}</span>
-                  <span class="reply-text" @click="onCommentClick(childItem.id, childItem.fromUserId)">回复</span>
+                  <span
+                    class="reply-text"
+                    @click="onCommentClick(childItem.id!, childItem.fromUserId!)"
+                    >回复</span
+                  >
                   <span class="user-name-child">{{ childItem.toUserName }}</span>
                   <span class="time">{{ childItem.createTime }}</span>
                 </div>
                 <div v-html="childItem.content" class="user-content_child"></div>
-                <span class="report-operate" @click="onReportClick(childItem.id, childItem.fromUserId)">举报</span><span
-                  class="reply-operate" @click="onCommentClick(item.id, childItem.fromUserId)">回复</span>
+                <span
+                  class="report-operate"
+                  @click="onReportClick(childItem.id!, childItem.fromUserId!)"
+                  >举报</span
+                ><span class="reply-operate" @click="onCommentClick(item.id!, childItem.fromUserId!)"
+                  >回复</span
+                >
                 <!-- <hr class="comment-line" /> -->
               </div>
             </el-card>
@@ -243,7 +294,9 @@ const showLoginDialog = ref(false)
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-          <span>对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span>
+        <span
+          >对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span
+        >
       </el-card>
     </div>
   </div>

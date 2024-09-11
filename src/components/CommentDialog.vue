@@ -1,210 +1,201 @@
 <script setup lang="ts">
-import axios from '@/axios';
-import { onBeforeUnmount, ref, shallowRef } from 'vue';
+import axios from '@/axios'
+import { onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import Compressor from 'compressorjs'
-import { ElMessage } from 'element-plus';
-import { de } from 'element-plus/es/locales.mjs';
-import router from '@/router';
-import { useRoute } from 'vue-router';
-
-
+import { ElMessage } from 'element-plus'
 const editorRef = shallowRef()
 const editor = editorRef.value
 
 onBeforeUnmount(() => {
-    if (editor == null) return
-    editor.destroy()
+  if (editor == null) return
+  editor.destroy()
 })
 
 const handleCreated = (editor: any) => {
-    editorRef.value = editor // 记录 editor 实例，重要！
+  editorRef.value = editor // 记录 editor 实例，重要！
 }
 const handleChange = (editor: { getHtml: () => any }) => {
-    commentValue.value = editor.getHtml()
-    console.log('change:', editor.getHtml())
+  comment.value.content = editor.getHtml()
+  console.log('change:', editor.getHtml())
 }
 const handleDestroyed = (editor: any) => {
-    console.log('destroyed', editor)
+  console.log('destroyed', editor)
 }
 const handleFocus = (editor: any) => {
-    console.log('focus', editor)
+  console.log('focus', editor)
 }
 const handleBlur = (editor: any) => {
-    console.log('blur', editor)
+  console.log('blur', editor)
 }
 const customAlert = (info: any, type: any) => {
-    alert(`【自定义提示】${type} - ${info}`)
+  alert(`【自定义提示】${type} - ${info}`)
 }
 const customPaste = (editor: any, event: any) => {
-    console.log('ClipboardEvent 粘贴事件对象', event)
+  console.log('ClipboardEvent 粘贴事件对象', event)
 }
 const mode = 'default'
 
 const toolbarConfig = {
-    excludeKeys: ['group-video', 'insertTable']
+  excludeKeys: ['group-video', 'insertTable']
 }
 
-var uploadUrl = import.meta.env.VITE_IMAGE_URL + "/file/upload"
+var uploadUrl = import.meta.env.VITE_IMAGE_URL + '/file/upload'
 
 const editorConfig = {
-    placeholder: '请输入内容...',
-    MENU_CONF: {
-        uploadImage: {
-            maxFileSize: 2 * 1024 * 1024,
-            server: uploadUrl, // 上传图片的服务器地址
-            fieldName: 'file', // 上传图片的字段名
-            headers: {
-                Authorization: localStorage.getItem('token')
-            },
-            // eslint-disable-next-line no-unused-vars
-            customInsert(
-                res: { code: number; data: String; message: any },
-                // eslint-disable-next-line no-unused-vars
-                insertFn: (arg0: any) => void
-            ) {
-                // 检查返回的 code 是否为 200
-                if (res.code === 200) {
-                    // 从返回的数据中获取图片 URL
-                    const url = res.data
-                    // 调用 wangEditor 提供的 insertFn，将图片插入到编辑器中
-                    insertFn(url)
-                } else {
-                    console.error('图片上传失败：', res.message)
-                }
-            },
-            // 图片上传之前的处理：压缩
-            onBeforeUpload(file: File) {
-                new Compressor(file, {
-                    quality: 0.6, // 图片压缩质量，0 - 1 之间的值，值越小质量越低，文件越小
-                    success(result) {
-                        // result 是压缩后的 Blob 对象
-                        console.log('压缩成功: ', result)
-                        const compressedFile = new File([result], file.name, {
-                            type: result.type
-                        })
-                        // 在这里处理压缩后的 Blob，比如上传到服务器
-                        return compressedFile
-                    },
-                    error(err) {
-                        // 处理压缩过程中出现的错误
-                        console.error('压缩失败: ', err)
-                    }
-                })
-                // return file;
-            }
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      maxFileSize: 2 * 1024 * 1024,
+      server: uploadUrl, // 上传图片的服务器地址
+      fieldName: 'file', // 上传图片的字段名
+      headers: {
+        Authorization: localStorage.getItem('token')
+      },
+      // eslint-disable-next-line no-unused-vars
+      customInsert(
+        res: { code: number; data: String; message: any },
+        // eslint-disable-next-line no-unused-vars
+        insertFn: (arg0: any) => void
+      ) {
+        // 检查返回的 code 是否为 200
+        if (res.code === 200) {
+          // 从返回的数据中获取图片 URL
+          const url = res.data
+          // 调用 wangEditor 提供的 insertFn，将图片插入到编辑器中
+          insertFn(url)
+        } else {
+          console.error('图片上传失败：', res.message)
         }
+      },
+      // 图片上传之前的处理：压缩
+      onBeforeUpload(file: File) {
+        new Compressor(file, {
+          quality: 0.6, // 图片压缩质量，0 - 1 之间的值，值越小质量越低，文件越小
+          success(result) {
+            // result 是压缩后的 Blob 对象
+            console.log('压缩成功: ', result)
+            const compressedFile = new File([result], file.name, {
+              type: result.type
+            })
+            // 在这里处理压缩后的 Blob，比如上传到服务器
+            return compressedFile
+          },
+          error(err) {
+            // 处理压缩过程中出现的错误
+            console.error('压缩失败: ', err)
+          }
+        })
+        // return file;
+      }
     }
+  }
 }
-
 
 interface Comment {
-    id: number
-    mindId: number
-    commentId: number
-    fromUserId: number
-    fromUserName: string
-    fromUserHeadImage: string
-    toUserId: number
-    toUserName: string
-    toUserHeadImage: string
-    content: string
-    createTime: string
-    childComments: Array<Comment>
+  id?: number
+  mindId?: number
+  commentId?: number
+  fromUserId?: number
+  fromUserName?: string
+  fromUserHeadImage?: string
+  toUserId?: number
+  toUserName?: string
+  toUserHeadImage?: string
+  content?: string
+  createTime?: string
+  childComments?: Array<Comment>
 }
 
-const commentDialogVisible = defineModel<boolean>('commentDialogVisible')
-const commentList = defineModel<Array<Comment>>('commentList')
-const mind = defineModel<any>('mind')
-const commentValue = defineModel<string>('commentValue')//待编辑的评论
+// const commentDialogVisible = defineModel<boolean>('commentDialogVisible')
+// const commentList = defineModel<Array<Comment>>('commentList')
+// const mind = defineModel<any>('mind')
+// const commentValue = defineModel<string>('commentValue')//待编辑的评论
+// var valueHtml = ref(commentValue)
 
+// const props = defineProps<{
+//     id?: number,
+//     mindId?: number,
+//     toUserId?: number,
+//     commentId?: number | null
+// }>()
 
 const props = defineProps<{
-    id?: number,
-    mindId?: number,
-    toUserId?: number,
-    commentId?: number | null
+  comment: Comment,
 }>()
 
+const valueHtml = ref()
+valueHtml.value = props.comment.content
+const comment = ref(props.comment)
+const commentDialogVisible = defineModel<boolean>('commentDialogVisible')
 
+//监听 props 变化，以便每次打开弹窗时更新输入框内容
+// watch(
+//   () => props.comment,
+//   (newComment) => {
+//     comment.value = { ...newComment }
+//   }
+// )
+
+const emit = defineEmits(['afterSaveComment'])
 
 //提交评论
 const submitComment = () => {
-    //是否输入内容
-    if (commentValue.value!.trim() == '<p><br></p>') {
-        ElMessage.error("请输入回复内容")
-        return
-    }
+  //是否输入内容
+  if (valueHtml.value!.trim() == '<p><br></p>') {
+    ElMessage.error('请输入回复内容')
+    return
+  }
 
+  // 发送请求
+  var response = axios.post('/comment', {
+    id: comment.value.id,
+    content: comment.value.content,
+    mindId: comment.value.mindId,
+    toUserId: comment.value.toUserId,
+    commentId: comment.value.commentId
+  })
 
-
-    var commentId;
-    if (props.commentId == 0) {
-        commentId = null
-    } else {
-        commentId = props.commentId;
-    }
-
-    // 发送请求
-    var response = axios.post('/comment', {
-        id: props.id,
-        content: commentValue.value,
-        mindId: props.mindId,
-        toUserId: props.toUserId,
-        commentId: commentId
+  response
+    .then(function (response) {
+      emit('afterSaveComment', response.data.data) // 通过 emit 将修改后的数据传回父组件
     })
-
-    response.then(function (response) {
-        commentDialogVisible.value = false
-        if (commentList.value) {
-            if (props.commentId == 0) {
-                //评论帖子
-                response.data.data.childComments = []
-                commentList.value.unshift(response.data.data)
-            } else {
-                for (let i = 0; i < commentList.value.length; i++) {
-                    //回复评论
-                    if (commentList.value[i].id === props.commentId) {
-                        commentList.value[i].childComments.push(response.data.data)
-                        break
-                    }
-                }
-            }
-        }
-
-        if (mind.value) {
-            if (mind.value.commentNum === null) {
-                mind.value.commentNum = 0
-            }
-            mind.value.commentNum += 1
-        }
-    }).catch(function (error) {
-        console.log(error)
+    .catch(function (error) {
+      console.log(error)
     })
-
-    //清空输入框    在主页编辑的时候不清除
-    const route = useRoute();
-    if (route.path != '/person') {
-        commentValue.value = ''
-    }
+    valueHtml.value = ''
+    commentDialogVisible.value = false
 }
 </script>
 
 <template>
-    <el-dialog v-model="commentDialogVisible" title="评论" width="800px" center>
-        <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" :mode="mode"
-            style="border-bottom: 1px solid #ccc" />
-        <Editor :defaultConfig="editorConfig" :mode="mode" v-model="commentValue"
-            style="height: 500px; overflow-y: hidden" @onCreated="handleCreated" @onChange="handleChange"
-            @onDestroyed="handleDestroyed" @onFocus="handleFocus" @onBlur="handleBlur" @customAlert="customAlert"
-            @customPaste="customPaste" />
-        <template #footer>
-            <div class="dialog-footer">
-                <el-button @click="commentDialogVisible = false">取消</el-button>
-                <el-button @click="submitComment">提交</el-button>
-            </div>
-        </template>
-    </el-dialog>
+  <el-dialog v-model="commentDialogVisible" title="评论" width="800px" center>
+    <Toolbar
+      :editor="editorRef"
+      :defaultConfig="toolbarConfig"
+      :mode="mode"
+      style="border-bottom: 1px solid #ccc"
+    />
+    <Editor
+      :defaultConfig="editorConfig"
+      :mode="mode"
+      v-model="valueHtml"
+      style="height: 500px; overflow-y: hidden"
+      @onCreated="handleCreated"
+      @onChange="handleChange"
+      @onDestroyed="handleDestroyed"
+      @onFocus="handleFocus"
+      @onBlur="handleBlur"
+      @customAlert="customAlert"
+      @customPaste="customPaste"
+    />
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="commentDialogVisible = false">取消</el-button>
+        <el-button @click="submitComment">提交</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 <style scoped lang="scss"></style>
