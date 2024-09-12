@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { TabsPaneContext } from 'element-plus'
+import { ElMessage, type TabsPaneContext } from 'element-plus'
 import Mind from './mind.vue'
 import axios from '@/axios'
 import { user } from '../stores/global'
 import { Edit, Delete } from '@element-plus/icons-vue'
 import CommentDialog from '../components/CommentDialog.vue'
+import router from '@/router'
 
 const activeName = ref('my-mind')
 const size = 'large'
@@ -45,7 +46,7 @@ var myFollowPageNum = 1
 async function loadMyFollowMore(isFirst: boolean) {
   if (!isFirst && activeName.value != 'my-follow') return
   busy.value = true
-  const response = await axios.get('/follow/getMyFollow', {
+  const response = await axios.get('/mind/getMyFollowMinds', {
     params: {
       pageNum: myFollowPageNum,
       pageSize: 10
@@ -147,15 +148,26 @@ const afterSaveComment = (comment: Comment) => {
     myReplyList.value[index.value].content = comment.content
   }
 }
+
+
+//跳转到原贴
+const onContentClick = (mindId: number, isMindDeleted: number) => {
+  if (isMindDeleted == 1) {
+    ElMessage.error('该帖已被删除')
+    return
+  }
+
+  router.push({
+    name: 'comment', query: {
+      id: mindId
+    }
+  })
+}
 </script>
 
 <template>
-  <CommentDialog
-    v-if="commentDialogVisible && comment"
-    :comment="comment"
-    @afterSaveComment="afterSaveComment"
-    v-model:comment-dialog-visible="commentDialogVisible"
-  />
+  <CommentDialog v-if="commentDialogVisible && comment" :comment="comment" @afterSaveComment="afterSaveComment"
+    v-model:comment-dialog-visible="commentDialogVisible" />
 
   <div class="my-content">
     <div class="main-content">
@@ -168,77 +180,42 @@ const afterSaveComment = (comment: Comment) => {
         </div>
 
         <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-          <el-tab-pane
-            label="我的帖子"
-            name="my-mind"
-            v-infinite-scroll="loadMyMindMore"
-            :infinite-scroll-disabled="busy"
-          >
+          <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore" :infinite-scroll-disabled="busy">
             <div v-if="myMindList.length > 0">
-              <Mind
-                v-for="item in myMindList"
-                :key="item.id"
-                :mind="item"
-                v-model:myMindList="myMindList"
-              >
+              <Mind :can-edit="true" v-for="item in myMindList" :key="item.id" :mind="item" v-model:myMindList="myMindList">
               </Mind>
             </div>
             <div v-if="myMindList.length == 0">
               <el-empty description="暂无数据" />
             </div>
           </el-tab-pane>
-          <el-tab-pane
-            label="我的关注"
-            name="my-follow"
-            v-infinite-scroll="loadMyFollowMore"
-            :infinite-scroll-disabled="busy"
-          >
+
+          <el-tab-pane label="我的关注" name="my-follow" v-infinite-scroll="loadMyFollowMore"
+            :infinite-scroll-disabled="busy">
             <div v-if="myFollowList.length == 0">
               <el-empty description="暂无数据" />
             </div>
-            <Mind v-for="(item, index) in myFollowList" :key="index" :mind="item"> </Mind>
+            <Mind :can-edit="false" v-for="(item, index) in myFollowList" :key="index" :mind="item"> </Mind>
           </el-tab-pane>
-          <el-tab-pane
-            label="我的回复"
-            name="my-reply"
-            v-infinite-scroll="loadMyReplyMore"
-            :infinite-scroll-disabled="busy"
-          >
+
+          <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore"
+            :infinite-scroll-disabled="busy">
             <div v-for="item in myReplyList" :key="item.id">
-              <div class="mind-content">
-                <div>{{ item.mindContent }}</div>
+              <div class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">{{ item.mindContent }}
               </div>
               <div class="user-header">
                 <img :src="item.fromUserHeadImage" alt="" style="width: 40px; max-height: 40px" />
                 <span class="user-name">{{ item.fromUserName }}</span>
                 <span class="time">{{ item.createTime }}</span>
                 <!-- 删除按钮，点击触发弹窗 -->
-                <el-popconfirm
-                  title="确定要删除该项吗？"
-                  confirmButtonText="确定"
-                  cancelButtonText="取消"
-                  icon="el-icon-warning"
-                  iconColor="red"
-                  @confirm="deleteComment(item.id)"
-                >
+                <el-popconfirm title="确定要删除该项吗？" confirmButtonText="确定" cancelButtonText="取消" icon="el-icon-warning"
+                  iconColor="red" @confirm="deleteComment(item.id)">
                   <template v-slot:reference>
-                    <el-button
-                      class="delete-btn"
-                      type="danger"
-                      :icon="Delete"
-                      circle
-                      size="small"
-                    />
+                    <el-button class="delete-btn" type="danger" :icon="Delete" circle size="small" />
                   </template>
                 </el-popconfirm>
 
-                <el-button
-                  type="info"
-                  :icon="Edit"
-                  circle
-                  size="small"
-                  @click="onEdit(item, index)"
-                />
+                <el-button type="info" :icon="Edit" circle size="small" @click="onEdit(item, index)" />
               </div>
               <div v-html="item.content" class="user-content"></div>
 
@@ -248,14 +225,12 @@ const afterSaveComment = (comment: Comment) => {
               <el-empty description="暂无数据" />
             </div>
           </el-tab-pane>
-          <el-tab-pane
-            label="回复我的"
-            name="reply-my"
-            v-infinite-scroll="loadReplyMyMore"
-            :infinite-scroll-disabled="busy"
-          >
+
+          <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore"
+            :infinite-scroll-disabled="busy">
             <div v-for="(item, index) in replyMyList" :key="index">
-              <div class="mind-content">{{ item.mindContent }}</div>
+              <div class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">{{ item.mindContent }}
+              </div>
               <div class="user-header">
                 <img :src="item.fromUserHeadImage" alt="" style="width: 40px; max-height: 40px" />
                 <span class="user-name">{{ item.fromUserName }}</span>
@@ -298,7 +273,7 @@ const afterSaveComment = (comment: Comment) => {
   margin-top: 10px;
 }
 
-.demo-tabs > .el-tabs__content {
+.demo-tabs>.el-tabs__content {
   padding: 32px;
   color: #6b778c;
   font-size: 32px;
@@ -342,6 +317,11 @@ const afterSaveComment = (comment: Comment) => {
 
 .mind-content {
   margin-top: 20px;
+  cursor: pointer;
+}
+
+.mind-content:hover {
+  color: #f5cb2b;
 }
 
 .delete-btn {

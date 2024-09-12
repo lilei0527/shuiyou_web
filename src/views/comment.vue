@@ -6,6 +6,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import CommentDialog from '../components/CommentDialog.vue'
+import BigImg from '@/components/BigImg.vue'
 
 const route = useRoute()
 var mindId = Number(route.query.id)
@@ -43,11 +44,12 @@ getMind()
 
 // 评论列表
 var pageNum = 1
+const busy = ref(false)
 const commentList = ref<Array<Comment>>([])
-const getCommentList = () => {
+const getCommentList = async () => {
   busy.value = true
   // 发送请求
-  var response = axios.get('/comment/getComments', {
+  var response = await axios.get('/comment/getComments', {
     params: {
       mindId: mindId,
       pageNum: pageNum,
@@ -55,25 +57,18 @@ const getCommentList = () => {
     }
   })
 
-  response.then(function (response) {
-    console.log(response)
-
-    const newItems = response.data.data.records
-    if (newItems.length > 0) {
-      commentList.value.push(...newItems)
-      pageNum++
-    }
-
-    if (newItems.length == 10) {
-      pageNum++
-    }
-    busy.value = false
-  })
+  const newItems = response.data.data.records
+  if (newItems.length > 0) {
+    commentList.value.push(...newItems)
+    pageNum++
+  }
+  busy.value = false
 }
 
-onMounted(() => {
-  getCommentList()
-})
+
+// onMounted(() => {
+//   getCommentList()
+// })
 
 const reportRadio = ref(3)
 const reportText = ref('')
@@ -121,7 +116,7 @@ function onReportClick(commentId: number, userId: number) {
   reportDialogVisible.value = true
 }
 
-function onCommentClick(commentId: number, userId: number) {
+function onCommentClick(userId: number, commentId?: number) {
   //判断是否已登录
   const token = localStorage.getItem('token')
   if (token == null) {
@@ -170,17 +165,38 @@ function follow(mindId: number) {
   })
 }
 
-const busy = ref(false)
+
 const showLoginDialog = ref(false)
+
+const ifShowBigger = ref(false)
+var imgSite: {
+  height: 0,
+  width: 0,
+}
+
+var imgSrc: ''
+
+function setImgBigger(e: any) {
+  if (e.target.nodeName === 'IMG') {
+    ifShowBigger.value = true //打开图片放大器开关
+    let userAgent = navigator.userAgent //获取浏览器属性
+    if (userAgent.indexOf('Chrome') > -1) { //Google
+      imgSrc = e.target.currentSrc
+    } else { //其他
+      imgSrc = e.target.href
+    }
+    //保存原图片属性
+    imgSite.height = e.target.offsetHeight
+    imgSite.width = e.target.offsetWidth
+  }
+}
+
 </script>
 
 <template>
   <!-- <AuthDialog v-model:isLoginDialogVisible="isLogin" /> -->
-  <CommentDialog
-    v-if="commentDialogVisible && comment"
-    :comment="comment"
-    @afterSaveComment="afterSaveComment"
-  />
+  <CommentDialog v-model:commentDialogVisible="commentDialogVisible" v-if="comment" :comment="comment"
+    @afterSaveComment="afterSaveComment" />
 
   <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
     <el-radio-group v-model="reportRadio" size="large">
@@ -204,7 +220,7 @@ const showLoginDialog = ref(false)
   <div class="my-content">
     <div class="main-content">
       <div class="edior">
-        <Mind :mind="mind" v-if="mind" />
+        <Mind :mind="mind" :can-edit="false" v-if="mind" />
 
         <!-- 操作栏 -->
         <tr class="mind_operation_row" v-if="mind">
@@ -212,13 +228,9 @@ const showLoginDialog = ref(false)
             <img src="../assets/svg/report.svg" style="width: 40px; max-height: 40px" alt="举报" />
             <span class="mind_operation_text">举报</span>
           </span>
-          <div @click="onCommentClick(0, mind.userId)">
+          <div @click="onCommentClick(mind.userId)">
             <span class="mind_operation_col">
-              <img
-                src="../assets/svg/comment.svg"
-                style="width: 40px; max-height: 40px"
-                alt="评论"
-              />
+              <img src="../assets/svg/comment.svg" style="width: 40px; max-height: 40px" alt="评论" />
               <span class="mind_operation_text">回复</span>
             </span>
           </div>
@@ -230,73 +242,58 @@ const showLoginDialog = ref(false)
         </tr>
 
         <!-- 评论区 -->
-        <div class="comment" v-infinite-scroll="getCommentList" :infinite-scroll-disabled="busy">
+        <div class="comment">
           <div class="comment-title-row">
-            <img
-              src="../assets/svg/planlist.svg"
-              style="width: 20px; max-height: 20px"
-              alt="方案"
-            /><span class="plan-name">方案列表</span>
+            <img src="../assets/svg/planlist.svg" style="width: 20px; max-height: 20px" alt="方案" /><span
+              class="plan-name">方案列表</span>
           </div>
-          <div v-for="(item, index) in commentList" :key="index">
-            <el-card>
-              <div class="user-header">
-                <img :src="item.fromUserHeadImage" alt="" style="width: 40px; max-height: 40px" />
-                <span class="user-name">{{ item.fromUserName }}</span>
-                <span class="time">{{ item.createTime }}</span>
-              </div>
-              <div v-html="item.content" class="user-content"></div>
-              <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)"
-                >举报</span
-              ><span class="reply-operate" @click="onCommentClick(item.id!, item.fromUserId!)"
-                >回复</span
-              >
-              <!-- <hr class="comment-line" /> -->
 
-              <!-- 子评论 -->
-              <div
-                class="child-comment"
-                v-for="(childItem, index) in item.childComments"
-                :key="index"
-              >
+          <div class="comment-list" v-infinite-scroll="getCommentList" :infinite-scroll-disabled="busy"
+            :infinite-scroll-distance="10">
+            <div v-for="(item, index) in commentList" :key="index">
+              <el-card>
                 <div class="user-header">
-                  <img
-                    :src="childItem.fromUserHeadImage"
-                    alt=""
-                    style="width: 30px; max-height: 30px"
-                  />
-                  <span class="user-name">{{ childItem.fromUserName }}</span>
-                  <span
-                    class="reply-text"
-                    @click="onCommentClick(childItem.id!, childItem.fromUserId!)"
-                    >回复</span
-                  >
-                  <span class="user-name-child">{{ childItem.toUserName }}</span>
-                  <span class="time">{{ childItem.createTime }}</span>
+                  <img :src="item.fromUserHeadImage" alt="" style="width: 40px; max-height: 40px" />
+                  <span class="user-name">{{ item.fromUserName }}</span>
+                  <span class="time">{{ item.createTime }}</span>
                 </div>
-                <div v-html="childItem.content" class="user-content_child"></div>
-                <span
-                  class="report-operate"
-                  @click="onReportClick(childItem.id!, childItem.fromUserId!)"
-                  >举报</span
-                ><span class="reply-operate" @click="onCommentClick(item.id!, childItem.fromUserId!)"
-                  >回复</span
-                >
+                <div @click="setImgBigger" v-html="item.content" class="user-content"></div>
+                <!-- 图片放大器 -->
+                <big-img :ifImgShow="ifShowBigger" :imgSrc="imgSrc" :imgSite="imgSite"
+                  @closeBigImg="ifShowBigger = false" />
+
+                <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)">举报</span><span
+                  class="reply-operate" @click="onCommentClick(item.fromUserId!, item.id!)">回复</span>
                 <!-- <hr class="comment-line" /> -->
-              </div>
-            </el-card>
+
+                <!-- 子评论 -->
+                <div class="child-comment" v-for="(childItem, index) in item.childComments" :key="index">
+                  <div class="user-header">
+                    <img :src="childItem.fromUserHeadImage" alt="" style="width: 30px; max-height: 30px" />
+                    <span class="user-name">{{ childItem.fromUserName }}</span>
+                    <span class="reply-text" @click="onCommentClick(childItem.fromUserId!, childItem.id!)">回复</span>
+                    <span class="user-name-child">{{ childItem.toUserName }}</span>
+                    <span class="time">{{ childItem.createTime }}</span>
+                  </div>
+                  <div v-html="childItem.content" class="user-content_child"></div>
+                  <span class="report-operate"
+                    @click="onReportClick(childItem.id!, childItem.fromUserId!)">举报</span><span class="reply-operate"
+                    @click="onCommentClick(childItem.fromUserId!, item.id!)">回复</span>
+                  <!-- <hr class="comment-line" /> -->
+                </div>
+              </el-card>
+            </div>
           </div>
-          <div v-if="commentList.length == 0">
-            <el-empty description="快来抢首评吧!" />
-          </div>
+
+        </div>
+        <div v-if="commentList.length == 0">
+          <el-empty description="快来抢首评吧!" />
         </div>
       </div>
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-        <span
-          >对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span
-        >
+        <span>对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span>
       </el-card>
     </div>
   </div>

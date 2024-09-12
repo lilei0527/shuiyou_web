@@ -20,6 +20,7 @@ interface Mind {
 const props = defineProps<{
   //子组件接收父组件传递过来的值
   mind: Mind
+  canEdit: boolean
 }>()
 var mind: Mind = props.mind
 
@@ -64,9 +65,6 @@ function deleteMind() {
   })
 }
 
-// 判断是否为个人主页
-const route = useRoute();
-const isPersonPage = route.path === '/person'
 </script>
 
 <template>
@@ -82,7 +80,7 @@ const isPersonPage = route.path === '/person'
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
             <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
-            <el-popconfirm v-if="isPersonPage" title="确定要删除该项吗？" confirmButtonText="确定" cancelButtonText="取消"
+            <el-popconfirm v-if="props.canEdit" title="确定要删除该项吗？" confirmButtonText="确定" cancelButtonText="取消"
               icon="el-icon-warning" iconColor="red" @confirm="deleteMind">
               <!-- 删除按钮，点击触发弹窗 -->
               <template v-slot:reference>
@@ -90,7 +88,7 @@ const isPersonPage = route.path === '/person'
               </template>
             </el-popconfirm>
 
-            <el-button v-if="isPersonPage" type="info" :icon="Edit" circle size="small"
+            <el-button v-if="props.canEdit" type="info" :icon="Edit" circle size="small"
               @click="$router.push({ name: 'create_mind', query: { mindId: mind.id } })" />
           </span>
         </div>
