@@ -326,4 +326,10 @@ form.example::content {
   font-size: 16px;
   width: 100px;
 }
+
+.username{
+  font-size: 16px;
+  color: black;
+  font-weight: 600;
+}
 </style>

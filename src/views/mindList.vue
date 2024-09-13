@@ -83,6 +83,12 @@ const handleCurrentChange = (val: number) => {
 const $router = useRouter()
 
 function onPublishClick() {
+  //是否登录
+  if (!localStorage.getItem('token')) {
+    $router.push({ name: 'login' })
+    return
+  }
+
   $router.push({ name: 'create_mind' })
 }
 </script>

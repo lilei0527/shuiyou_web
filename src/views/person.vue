@@ -7,6 +7,7 @@ import { user } from '../stores/global'
 import { Edit, Delete } from '@element-plus/icons-vue'
 import CommentDialog from '../components/CommentDialog.vue'
 import router from '@/router'
+import { c } from 'node_modules/vite/dist/node/types.d-aGj9QkWt'
 
 const activeName = ref('my-mind')
 const size = 'large'
@@ -21,6 +22,7 @@ const busy = ref(false)
 const myMindList = ref<Array<any>>([])
 myMindList.value = myMindList.value.filter((item) => item.isDeleted != 1)
 
+const noMoreDataOfMyMind = ref(false)
 var myMindPageNum = 1
 async function loadMyMindMore(isFirst: boolean) {
   if (!isFirst && activeName.value != 'my-mind') return
@@ -35,6 +37,9 @@ async function loadMyMindMore(isFirst: boolean) {
   if (newItems.length > 0) {
     myMindList.value.push(...newItems)
     myMindPageNum++
+    if (newItems.length < 10) {
+      noMoreDataOfMyMind.value = true
+    }
   }
   busy.value = false
 }
@@ -43,6 +48,7 @@ loadMyMindMore(true)
 //我的关注
 const myFollowList = ref<Array<any>>([])
 var myFollowPageNum = 1
+const noMoreDataOfMyFollow = ref(false)
 async function loadMyFollowMore(isFirst: boolean) {
   if (!isFirst && activeName.value != 'my-follow') return
   busy.value = true
@@ -56,6 +62,9 @@ async function loadMyFollowMore(isFirst: boolean) {
   if (newItems.length > 0) {
     myFollowList.value.push(...newItems)
     myFollowPageNum++
+    if (newItems.length < 10) {
+      noMoreDataOfMyFollow.value = true
+    }
   }
   busy.value = false
 }
@@ -64,6 +73,7 @@ loadMyFollowMore(true)
 //我的回复
 const myReplyList = ref<Array<any>>([])
 var myReplyPageNum = 1
+const noMoreDataOfMyReply = ref(false)
 async function loadMyReplyMore(isFirst: boolean) {
   if (!isFirst && activeName.value != 'my-reply') return
   busy.value = true
@@ -77,6 +87,9 @@ async function loadMyReplyMore(isFirst: boolean) {
   if (newItems.length > 0) {
     myReplyList.value.push(...newItems)
     myReplyPageNum++
+    if (newItems.length < 10) {
+      noMoreDataOfMyReply.value = true
+    }
   }
   busy.value = false
 }
@@ -85,6 +98,7 @@ loadMyReplyMore(true)
 //回复我的
 const replyMyList = ref<Array<any>>([])
 var replyMyPageNum = 1
+const noMoreDataOfReplyMy = ref(false)
 async function loadReplyMyMore(isFirst: boolean) {
   if (!isFirst && activeName.value != 'reply-my') return
   busy.value = true
@@ -98,6 +112,9 @@ async function loadReplyMyMore(isFirst: boolean) {
   if (newItems.length > 0) {
     replyMyList.value.push(...newItems)
     replyMyPageNum++
+    if (newItems.length < 10) {
+      noMoreDataOfReplyMy.value = true
+    }
   }
   busy.value = false
 }
@@ -180,7 +197,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
         </div>
 
         <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-          <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore" :infinite-scroll-disabled="busy">
+          <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore" :infinite-scroll-disabled="busy||noMoreDataOfMyMind">
             <div v-if="myMindList.length > 0">
               <Mind :can-edit="true" v-for="item in myMindList" :key="item.id" :mind="item" v-model:myMindList="myMindList">
               </Mind>
@@ -191,7 +208,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
           </el-tab-pane>
 
           <el-tab-pane label="我的关注" name="my-follow" v-infinite-scroll="loadMyFollowMore"
-            :infinite-scroll-disabled="busy">
+            :infinite-scroll-disabled="busy||noMoreDataOfMyFollow">
             <div v-if="myFollowList.length == 0">
               <el-empty description="暂无数据" />
             </div>
@@ -199,7 +216,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
           </el-tab-pane>
 
           <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore"
-            :infinite-scroll-disabled="busy">
+            :infinite-scroll-disabled="busy||noMoreDataOfMyReply">
             <div v-for="item in myReplyList" :key="item.id">
               <div class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">{{ item.mindContent }}
               </div>
@@ -227,7 +244,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
           </el-tab-pane>
 
           <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore"
-            :infinite-scroll-disabled="busy">
+            :infinite-scroll-disabled="busy||noMoreDataOfReplyMy">
             <div v-for="(item, index) in replyMyList" :key="index">
               <div class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">{{ item.mindContent }}
               </div>

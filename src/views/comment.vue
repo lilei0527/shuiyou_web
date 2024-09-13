@@ -8,6 +8,7 @@ import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import CommentDialog from '../components/CommentDialog.vue'
 import Viewer from 'viewerjs'
 import 'viewerjs/dist/viewer.css'
+import { fa } from 'element-plus/es/locales.mjs'
 
 const route = useRoute()
 var mindId = Number(route.query.id)
@@ -46,6 +47,7 @@ getMind()
 // 评论列表
 var pageNum = 1
 const busy = ref(false)
+const noMoreData = ref(false)
 const commentList = ref<Array<Comment>>([])
 const getCommentList = async () => {
   busy.value = true
@@ -62,6 +64,9 @@ const getCommentList = async () => {
   if (newItems.length > 0) {
     commentList.value.push(...newItems)
     pageNum++
+    if (newItems.length < 10) {
+        noMoreData.value = true; // 当前页数据不足，认为已经到最后一页
+      }
 
     // 在评论列表更新完毕后
     nextTick(async () => {
@@ -73,9 +78,9 @@ const getCommentList = async () => {
   busy.value = false
 }
 
-// onMounted(() => {
-//   getCommentList()
-// })
+onMounted(() => {
+  getCommentList()
+})
 
 const reportRadio = ref(3)
 const reportText = ref('')
@@ -276,8 +281,8 @@ const initViewer = () => {
           <div
             class="comment-list"
             v-infinite-scroll="getCommentList"
-            :infinite-scroll-disabled="busy"
-            :infinite-scroll-distance="0"
+            :infinite-scroll-disabled="busy || noMoreData"
+            :infinite-scroll-distance="50"
           >
             <div v-for="(item, index) in commentList" :key="index">
               <el-card>

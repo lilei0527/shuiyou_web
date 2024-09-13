@@ -76,7 +76,7 @@ function deleteMind() {
       </td>
       <td width="100%" valign="top" class="mind_content_col">
         <div class="fr">
-          <strong>{{ mind.accountName }}</strong>
+          <strong class="account-name">{{ mind.accountName }}</strong>
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
             <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
@@ -172,5 +172,10 @@ table {
 
 .delete-btn {
   margin-left: 12px;
+}
+.account-name{
+  font-size: 16px;
+  color: black;
+  font-weight: 600;
 }
 </style>
