@@ -21,6 +21,7 @@
     "element-plus": "^2.8.0",
     "pinia": "^2.1.7",
     "unocss": "^0.62.3",
+    "viewerjs": "^1.11.6",
     "vue": "^3.4.29",
     "vue-froala-wysiwyg": "^4.2.1",
     "vue-infinite-scroll": "^2.0.2",

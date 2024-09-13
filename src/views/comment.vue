@@ -2,11 +2,12 @@
 import axios from '@/axios'
 import { useRoute } from 'vue-router'
 import Mind from './mind.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import CommentDialog from '../components/CommentDialog.vue'
-import BigImg from '@/components/BigImg.vue'
+import Viewer from 'viewerjs'
+import 'viewerjs/dist/viewer.css'
 
 const route = useRoute()
 var mindId = Number(route.query.id)
@@ -61,10 +62,16 @@ const getCommentList = async () => {
   if (newItems.length > 0) {
     commentList.value.push(...newItems)
     pageNum++
+
+    // 在评论列表更新完毕后
+    nextTick(async () => {
+      // 等待所有图片加载完成后再初始化 Viewer
+      await waitForImagesToLoad();
+      initViewer();
+    });
   }
   busy.value = false
 }
-
 
 // onMounted(() => {
 //   getCommentList()
@@ -165,38 +172,49 @@ function follow(mindId: number) {
   })
 }
 
-
 const showLoginDialog = ref(false)
 
-const ifShowBigger = ref(false)
-var imgSite: {
-  height: 0,
-  width: 0,
-}
 
-var imgSrc: ''
+// 图片加载的 Promise 逻辑
+const waitForImagesToLoad = () => {
+  const images = document.querySelectorAll('.comment-list img');
+  return Promise.all(
+    Array.from(images).map(img => {
+      const imageElement = img as HTMLImageElement;  // 类型断言
+      return new Promise(resolve => {
+        if (imageElement.complete) {
+          resolve(true);
+        } else {
+          imageElement.onload = () => resolve(true);
+          imageElement.onerror = () => resolve(true);  // 即使图片加载失败也继续执行
+        }
+      });
+    })
+  );
+};
 
-function setImgBigger(e: any) {
-  if (e.target.nodeName === 'IMG') {
-    ifShowBigger.value = true //打开图片放大器开关
-    let userAgent = navigator.userAgent //获取浏览器属性
-    if (userAgent.indexOf('Chrome') > -1) { //Google
-      imgSrc = e.target.currentSrc
-    } else { //其他
-      imgSrc = e.target.href
-    }
-    //保存原图片属性
-    imgSite.height = e.target.offsetHeight
-    imgSite.width = e.target.offsetWidth
+// 初始化图片查看器
+const initViewer = () => {
+  const gallery = document.querySelector('.comment-list') as HTMLElement // 选择富文本容器
+  if (gallery) {
+    new Viewer(gallery, {
+      toolbar: true, // 是否显示工具栏
+      scalable: true, // 支持缩放
+      movable: true, // 支持拖动
+      zoomable: true // 支持放大
+    })
   }
 }
-
 </script>
 
 <template>
   <!-- <AuthDialog v-model:isLoginDialogVisible="isLogin" /> -->
-  <CommentDialog v-model:commentDialogVisible="commentDialogVisible" v-if="comment" :comment="comment"
-    @afterSaveComment="afterSaveComment" />
+  <CommentDialog
+    v-model:commentDialogVisible="commentDialogVisible"
+    v-if="comment"
+    :comment="comment"
+    @afterSaveComment="afterSaveComment"
+  />
 
   <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
     <el-radio-group v-model="reportRadio" size="large">
@@ -230,7 +248,11 @@ function setImgBigger(e: any) {
           </span>
           <div @click="onCommentClick(mind.userId)">
             <span class="mind_operation_col">
-              <img src="../assets/svg/comment.svg" style="width: 40px; max-height: 40px" alt="评论" />
+              <img
+                src="../assets/svg/comment.svg"
+                style="width: 40px; max-height: 40px"
+                alt="评论"
+              />
               <span class="mind_operation_text">回复</span>
             </span>
           </div>
@@ -244,12 +266,19 @@ function setImgBigger(e: any) {
         <!-- 评论区 -->
         <div class="comment">
           <div class="comment-title-row">
-            <img src="../assets/svg/planlist.svg" style="width: 20px; max-height: 20px" alt="方案" /><span
-              class="plan-name">方案列表</span>
+            <img
+              src="../assets/svg/planlist.svg"
+              style="width: 20px; max-height: 20px"
+              alt="方案"
+            /><span class="plan-name">方案列表</span>
           </div>
 
-          <div class="comment-list" v-infinite-scroll="getCommentList" :infinite-scroll-disabled="busy"
-            :infinite-scroll-distance="10">
+          <div
+            class="comment-list"
+            v-infinite-scroll="getCommentList"
+            :infinite-scroll-disabled="busy"
+            :infinite-scroll-distance="0"
+          >
             <div v-for="(item, index) in commentList" :key="index">
               <el-card>
                 <div class="user-header">
@@ -257,34 +286,50 @@ function setImgBigger(e: any) {
                   <span class="user-name">{{ item.fromUserName }}</span>
                   <span class="time">{{ item.createTime }}</span>
                 </div>
-                <div @click="setImgBigger" v-html="item.content" class="user-content"></div>
-                <!-- 图片放大器 -->
-                <big-img :ifImgShow="ifShowBigger" :imgSrc="imgSrc" :imgSite="imgSite"
-                  @closeBigImg="ifShowBigger = false" />
-
-                <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)">举报</span><span
-                  class="reply-operate" @click="onCommentClick(item.fromUserId!, item.id!)">回复</span>
+                <div v-html="item.content" class="user-content"></div>
+                <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)"
+                  >举报</span
+                ><span class="reply-operate" @click="onCommentClick(item.fromUserId!, item.id!)"
+                  >回复</span
+                >
                 <!-- <hr class="comment-line" /> -->
 
                 <!-- 子评论 -->
-                <div class="child-comment" v-for="(childItem, index) in item.childComments" :key="index">
+                <div
+                  class="child-comment"
+                  v-for="(childItem, index) in item.childComments"
+                  :key="index"
+                >
                   <div class="user-header">
-                    <img :src="childItem.fromUserHeadImage" alt="" style="width: 30px; max-height: 30px" />
+                    <img
+                      :src="childItem.fromUserHeadImage"
+                      alt=""
+                      style="width: 30px; max-height: 30px"
+                    />
                     <span class="user-name">{{ childItem.fromUserName }}</span>
-                    <span class="reply-text" @click="onCommentClick(childItem.fromUserId!, childItem.id!)">回复</span>
+                    <span
+                      class="reply-text"
+                      @click="onCommentClick(childItem.fromUserId!, childItem.id!)"
+                      >回复</span
+                    >
                     <span class="user-name-child">{{ childItem.toUserName }}</span>
                     <span class="time">{{ childItem.createTime }}</span>
                   </div>
                   <div v-html="childItem.content" class="user-content_child"></div>
-                  <span class="report-operate"
-                    @click="onReportClick(childItem.id!, childItem.fromUserId!)">举报</span><span class="reply-operate"
-                    @click="onCommentClick(childItem.fromUserId!, item.id!)">回复</span>
+                  <span
+                    class="report-operate"
+                    @click="onReportClick(childItem.id!, childItem.fromUserId!)"
+                    >举报</span
+                  ><span
+                    class="reply-operate"
+                    @click="onCommentClick(childItem.fromUserId!, item.id!)"
+                    >回复</span
+                  >
                   <!-- <hr class="comment-line" /> -->
                 </div>
               </el-card>
             </div>
           </div>
-
         </div>
         <div v-if="commentList.length == 0">
           <el-empty description="快来抢首评吧!" />
@@ -293,7 +338,9 @@ function setImgBigger(e: any) {
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-        <span>对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span>
+        <span
+          >对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span
+        >
       </el-card>
     </div>
   </div>
@@ -430,5 +477,9 @@ el-button {
 
 .mind_operation_text:hover {
   color: #f5cb2b;
+}
+
+.comment-list img {
+  cursor: pointer;
 }
 </style>
