@@ -6,7 +6,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import CommentDialog from '../components/CommentDialog.vue'
-import BigImg from '@/components/BigImg.vue'
+// import BigImg from '../components/BigImg.vue'
 
 const route = useRoute()
 var mindId = Number(route.query.id)
@@ -257,10 +257,10 @@ function setImgBigger(e: any) {
                   <span class="user-name">{{ item.fromUserName }}</span>
                   <span class="time">{{ item.createTime }}</span>
                 </div>
-                <div @click="setImgBigger" v-html="item.content" class="user-content"></div>
+                <!-- <div @click="setImgBigger" v-html="item.content" class="user-content"></div> -->
                 <!-- 图片放大器 -->
-                <big-img :ifImgShow="ifShowBigger" :imgSrc="imgSrc" :imgSite="imgSite"
-                  @closeBigImg="ifShowBigger = false" />
+                <!-- <big-img :ifImgShow="ifShowBigger" :imgSrc="imgSrc" :imgSite="imgSite"
+                  @closeBigImg="ifShowBigger = false" /> -->
 
                 <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)">举报</span><span
                   class="reply-operate" @click="onCommentClick(item.fromUserId!, item.id!)">回复</span>

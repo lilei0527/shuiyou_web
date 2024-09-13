@@ -9,6 +9,7 @@
 <script>
 
 export default {
+    name: 'BigImg',
     props: {
         ifImgShow: {
             type: Boolean,
