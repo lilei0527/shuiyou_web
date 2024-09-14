@@ -63,6 +63,7 @@ const scrollToTop = () => {
 
 import type { ComponentSize } from 'element-plus'
 import { useRouter } from 'vue-router'
+import AuthDialog from '@/components/AuthDialog.vue'
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(10)
@@ -81,11 +82,11 @@ const handleCurrentChange = (val: number) => {
 
 
 const $router = useRouter()
-
+const showLoginDialog = ref(false)
 function onPublishClick() {
   //是否登录
   if (!localStorage.getItem('token')) {
-    $router.push({ name: 'login' })
+    showLoginDialog.value = true
     return
   }
 
@@ -93,6 +94,7 @@ function onPublishClick() {
 }
 </script>
 <template>
+  <AuthDialog v-model:isLoginDialogVisible="showLoginDialog" />
   <el-dialog v-model="centerDialogVisible" title="举报" width="500px" center class="report-dialog">
     <el-radio-group v-model="radio" size="large">
       <el-radio :value="0">侮辱性、歧视性或攻击性言语</el-radio>
@@ -116,35 +118,19 @@ function onPublishClick() {
     <div class="main-content">
       <!-- 类型导航 -->
       <div class="navigation" style="flex-wrap: nowrap">
-        <a
-          class="navigation-item"
-          href="#/"
-          @click="typeClick(item.id)"
-          :class="{ active: isActive == item.id }"
-          v-for="(item, index) in typeList"
-          :key="index"
-          >{{ item?.name }}</a
-        >
+        <a class="navigation-item" href="#/" @click="typeClick(item.id)" :class="{ active: isActive == item.id }"
+          v-for="(item, index) in typeList" :key="index">{{ item?.name }}</a>
       </div>
       <!-- 帖子列表 -->
 
       <Mind :can-edit="false" v-for="(item, index) in mindList" :key="index" :mind="item"> </Mind>
-      <div v-if="mindList&&mindList.length == 0">
+      <div v-if="mindList && mindList.length == 0">
         <el-empty description="更多的帖子正在等待发布" />
       </div>
       <!-- 分页 -->
-      <el-pagination
-        class="pager"
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :size="size"
-        :disabled="disabled"
-        :background="background"
-        layout="prev, pager, next, jumper"
-        :total="total"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
+      <el-pagination class="pager" v-model:current-page="currentPage" v-model:page-size="pageSize" :size="size"
+        :disabled="disabled" :background="background" layout="prev, pager, next, jumper" :total="total"
+        @size-change="handleSizeChange" @current-change="handleCurrentChange" />
     </div>
     <div class="right-content">
       <el-button size="large" color="#f5cb2b" @click="onPublishClick">
@@ -154,7 +140,7 @@ function onPublishClick() {
       </el-button>
 
       <el-card style="max-width: 100%; margin-top: 20px" class="rule">
-          <span>本社区为个人求购信息交流平台，个人发布的求购信息仅供参考，双方交易需谨慎协商，以双方自愿为原则。</span>
+        <span>本社区为个人求购信息交流平台，个人发布的求购信息仅供参考，双方交易需谨慎协商，以双方自愿为原则。</span>
       </el-card>
 
       <el-card style="max-width: 100%; margin-top: 20px" class="rule">
@@ -198,7 +184,7 @@ function onPublishClick() {
   justify-content: center;
 }
 
-.example-showcase .el-dropdown + .el-dropdown {
+.example-showcase .el-dropdown+.el-dropdown {
   margin-left: 15px;
 }
 

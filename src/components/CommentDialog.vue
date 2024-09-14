@@ -130,13 +130,13 @@ valueHtml.value = props.comment.content
 const comment = ref(props.comment)
 const commentDialogVisible = defineModel<boolean>('commentDialogVisible')
 
-//监听 props 变化，以便每次打开弹窗时更新输入框内容
-// watch(
-//   () => props.comment,
-//   (newComment) => {
-//     comment.value = { ...newComment }
-//   }
-// )
+// 监听 props 变化，以便每次打开弹窗时更新输入框内容
+watch(
+    () => props.comment,
+    (newComment) => {
+        comment.value = { ...newComment }
+    }
+)
 
 const emits = defineEmits(['afterSaveComment'])
 

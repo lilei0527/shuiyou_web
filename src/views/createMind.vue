@@ -66,6 +66,10 @@ const handleBeforeUpload = (file: File) => {
             const compressedFile = new File([blob], file.name, {
               type: file.type
             })
+
+            if (compressedFile.size > 1024 * 1024 * 1) {
+              ElMessage.error('图片过大,请裁剪或者压缩后再上传')
+            }
             resolve(compressedFile) // 返回压缩后的图片文件
           },
           file.type,
@@ -90,7 +94,7 @@ const headers = {
 
 const route = useRoute()
 const mindId = route.query.mindId
-var mind : Mind;
+var mind: Mind;
 
 interface Mind {
   id: number
@@ -105,7 +109,7 @@ interface Mind {
 }
 
 const form = reactive({
-  type: 1, 
+  type: 1,
   desc: ''
 });
 //帖子详情
@@ -120,23 +124,23 @@ const getMind = () => {
     mind = response.data.data
     form.type = mind.typeId
     form.desc = mind.content
-    if (mind.images!=null&&mind.images!='') {
+    if (mind.images != null && mind.images != '') {
       mind.images.split(';').forEach((url) => {
-      fileList.value.push({
-        name: 'image.jpg',
-        url: url,
-        status: 'success'
-      });
-    })
+        fileList.value.push({
+          name: 'image.jpg',
+          url: url,
+          status: 'success'
+        });
+      })
     }
   })
 }
 
-if (mindId&&mindId!=null) {
+if (mindId && mindId != null) {
   getMind()
 }
 
-const isDisabled = mindId!=null
+const isDisabled = mindId != null
 
 
 const onSubmit = async () => {
@@ -145,7 +149,7 @@ const onSubmit = async () => {
     if (file.response && (file.response as { data: unknown }).data) {
       var url = (file.response as { data: string }).data
       imageUrls += (url + ';')
-    }else {
+    } else {
       imageUrls += (file.url + ';')
     }
   })
@@ -153,7 +157,7 @@ const onSubmit = async () => {
   imageUrls = imageUrls.slice(0, -1)
 
   var response = await axios.post('/mind', {
-    id:mindId,
+    id: mindId,
     typeId: form.type,
     content: form.desc,
     images: imageUrls
@@ -207,13 +211,14 @@ const rules = {
   ]
 }
 
-var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
+var uploadUrl = import.meta.env.VITE_IMAGE_URL + "/file/upload"
 </script>
 
 <template>
   <div class="my-content">
     <div class="main-content">
-      <el-form :model="form" label-width="auto" style="max-width: 100%" :rules="rules" ref="ruleFormRef" @input="handleInput">
+      <el-form :model="form" label-width="auto" style="max-width: 100%" :rules="rules" ref="ruleFormRef"
+        @input="handleInput">
         <el-form-item label="分类" prop="type">
           <el-radio-group v-model="form.type" :disabled="isDisabled">
             <el-radio v-for="(item, index) in typeList" :key="index" :value="item.id">{{
@@ -227,16 +232,11 @@ var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
         </el-form-item>
 
         <el-form-item label="上传图片">
-          <el-upload
-            :action="uploadUrl"
-            :headers="headers"
-            v-model:file-list="fileList"
-            list-type="picture-card"
-            :on-preview="handlePictureCardPreview"
-            :on-remove="handleRemove"
-            :before-upload="handleBeforeUpload"
-          >
-            <el-icon><Plus /></el-icon>
+          <el-upload :action="uploadUrl" :headers="headers" v-model:file-list="fileList" list-type="picture-card"
+            :on-preview="handlePictureCardPreview" :on-remove="handleRemove" :before-upload="handleBeforeUpload">
+            <el-icon>
+              <Plus />
+            </el-icon>
           </el-upload>
           <el-dialog v-model="dialogVisible">
             <img w-full :src="dialogImageUrl" alt="Preview Image" />
@@ -245,13 +245,13 @@ var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
 
         <el-form-item>
           <el-button @click="onCancel">取消</el-button>
-          <el-button  @click="onSubmit" :disabled="!isFormValid">发布</el-button>
+          <el-button @click="onSubmit" :disabled="!isFormValid">发布</el-button>
         </el-form-item>
       </el-form>
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-              <span>发布求购信息时，建议提供详细的物品名称、数量、单价、联系方式等信息，以便卖家更快的与您联系。</span>
+        <span>发布求购信息时，建议提供详细的物品名称、数量、单价、联系方式等信息，以便卖家更快的与您联系。</span>
       </el-card>
     </div>
   </div>

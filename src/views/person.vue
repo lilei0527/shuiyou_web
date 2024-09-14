@@ -197,9 +197,11 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
         </div>
 
         <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-          <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore" :infinite-scroll-disabled="busy||noMoreDataOfMyMind">
+          <el-tab-pane label="我的帖子" name="my-mind" v-infinite-scroll="loadMyMindMore"
+            :infinite-scroll-disabled="busy || noMoreDataOfMyMind">
             <div v-if="myMindList.length > 0">
-              <Mind :can-edit="true" v-for="item in myMindList" :key="item.id" :mind="item" v-model:myMindList="myMindList">
+              <Mind :can-edit="true" v-for="item in myMindList" :key="item.id" :mind="item"
+                v-model:myMindList="myMindList">
               </Mind>
             </div>
             <div v-if="myMindList.length == 0">
@@ -208,7 +210,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
           </el-tab-pane>
 
           <el-tab-pane label="我的关注" name="my-follow" v-infinite-scroll="loadMyFollowMore"
-            :infinite-scroll-disabled="busy||noMoreDataOfMyFollow">
+            :infinite-scroll-disabled="busy || noMoreDataOfMyFollow">
             <div v-if="myFollowList.length == 0">
               <el-empty description="暂无数据" />
             </div>
@@ -216,7 +218,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
           </el-tab-pane>
 
           <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore"
-            :infinite-scroll-disabled="busy||noMoreDataOfMyReply">
+            :infinite-scroll-disabled="busy || noMoreDataOfMyReply">
             <div v-for="item in myReplyList" :key="item.id">
               <div class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">{{ item.mindContent }}
               </div>
@@ -244,7 +246,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
           </el-tab-pane>
 
           <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore"
-            :infinite-scroll-disabled="busy||noMoreDataOfReplyMy">
+            :infinite-scroll-disabled="busy || noMoreDataOfReplyMy">
             <div v-for="(item, index) in replyMyList" :key="index">
               <div class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">{{ item.mindContent }}
               </div>
@@ -264,10 +266,9 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
       </div>
     </div>
     <div class="right-content">
-      <div class="cell">
-        <span>12dfdsfsdfsdfsdfsd</span>
-        <div>df11</div>
-      </div>
+      <span>
+        我的帖子和我的回复均可以编辑和删除，如果您的需求已经完成，可以修改帖子的内容,以防被其他用户联系！
+      </span>
     </div>
   </div>
 </template>

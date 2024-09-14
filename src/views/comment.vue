@@ -6,9 +6,9 @@ import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import CommentDialog from '../components/CommentDialog.vue'
-import Viewer from 'viewerjs'
+import AuthDialog from '../components/AuthDialog.vue'
 import 'viewerjs/dist/viewer.css'
-import { fa } from 'element-plus/es/locales.mjs'
+import Viewer from 'viewerjs'
 
 const route = useRoute()
 var mindId = Number(route.query.id)
@@ -65,8 +65,8 @@ const getCommentList = async () => {
     commentList.value.push(...newItems)
     pageNum++
     if (newItems.length < 10) {
-        noMoreData.value = true; // 当前页数据不足，认为已经到最后一页
-      }
+      noMoreData.value = true; // 当前页数据不足，认为已经到最后一页
+    }
 
     // 在评论列表更新完毕后
     nextTick(async () => {
@@ -82,7 +82,7 @@ onMounted(() => {
   getCommentList()
 })
 
-const reportRadio = ref(3)
+const reportRadio = ref(0)
 const reportText = ref('')
 const reportUserId = ref(0)
 const reportCommentId = ref(0)
@@ -112,17 +112,28 @@ function report() {
       reportCommentId.value = 0
     })
   reportDialogVisible.value = false
+  reportReset()
+}
+
+function reportReset() {
+  reportRadio.value = 0
+  reportText.value = ''
+}
+
+function onReportCancel() {
+  reportDialogVisible.value = false
+  reportReset()
 }
 
 const comment = ref<Comment>()
 
 function onReportClick(commentId: number, userId: number) {
-  //判断是否已登录
-  const token = localStorage.getItem('token')
-  if (token == null) {
-    showLoginDialog.value = true
-    return
-  }
+  // //判断是否已登录
+  // const token = localStorage.getItem('token')
+  // if (token == null) {
+  //   showLoginDialog.value = true
+  //   return
+  // }
   reportCommentId.value = commentId
   reportUserId.value = userId
   reportDialogVisible.value = true
@@ -167,12 +178,24 @@ function afterSaveComment(comment: Comment) {
     }
     mind.value.commentNum += 1
   }
+
+  // 在评论列表更新完毕后
+  nextTick(async () => {
+    // 等待所有图片加载完成后再初始化 Viewer
+    await waitForImagesToLoad();
+    initViewer();
+  });
 }
 
 //关注帖子
 function follow(mindId: number) {
   axios.post('/follow', { mindId: mindId }).then((res) => {
-    console.log(res)
+    //判断是否已登录
+    const token = localStorage.getItem('token')
+    if (token == null) {
+      showLoginDialog.value = true
+      return
+    }
     ElMessage('已关注')
   })
 }
@@ -213,13 +236,9 @@ const initViewer = () => {
 </script>
 
 <template>
-  <!-- <AuthDialog v-model:isLoginDialogVisible="isLogin" /> -->
-  <CommentDialog
-    v-model:commentDialogVisible="commentDialogVisible"
-    v-if="comment"
-    :comment="comment"
-    @afterSaveComment="afterSaveComment"
-  />
+  <AuthDialog v-model:isLoginDialogVisible="showLoginDialog" />
+  <CommentDialog v-model:commentDialogVisible="commentDialogVisible" v-if="comment" :comment="comment"
+    @afterSaveComment="afterSaveComment" />
 
   <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
     <el-radio-group v-model="reportRadio" size="large">
@@ -234,7 +253,7 @@ const initViewer = () => {
     <el-input type="textarea" v-model="reportText" rows="4" class="report-input" />
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="reportDialogVisible = false">取消</el-button>
+        <el-button @click="onReportCancel()">取消</el-button>
         <el-button type="primary" @click="report()"> 确定 </el-button>
       </div>
     </template>
@@ -253,11 +272,7 @@ const initViewer = () => {
           </span>
           <div @click="onCommentClick(mind.userId)">
             <span class="mind_operation_col">
-              <img
-                src="../assets/svg/comment.svg"
-                style="width: 40px; max-height: 40px"
-                alt="评论"
-              />
+              <img src="../assets/svg/comment.svg" style="width: 40px; max-height: 40px" alt="评论" />
               <span class="mind_operation_text">回复</span>
             </span>
           </div>
@@ -271,19 +286,12 @@ const initViewer = () => {
         <!-- 评论区 -->
         <div class="comment">
           <div class="comment-title-row">
-            <img
-              src="../assets/svg/planlist.svg"
-              style="width: 20px; max-height: 20px"
-              alt="方案"
-            /><span class="plan-name">方案列表</span>
+            <img src="../assets/svg/planlist.svg" style="width: 20px; max-height: 20px" alt="方案" /><span
+              class="plan-name">方案列表</span>
           </div>
 
-          <div
-            class="comment-list"
-            v-infinite-scroll="getCommentList"
-            :infinite-scroll-disabled="busy || noMoreData"
-            :infinite-scroll-distance="50"
-          >
+          <div class="comment-list" v-infinite-scroll="getCommentList" :infinite-scroll-disabled="busy || noMoreData"
+            :infinite-scroll-distance="50">
             <div v-for="(item, index) in commentList" :key="index">
               <el-card>
                 <div class="user-header">
@@ -292,44 +300,23 @@ const initViewer = () => {
                   <span class="time">{{ item.createTime }}</span>
                 </div>
                 <div v-html="item.content" class="user-content"></div>
-                <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)"
-                  >举报</span
-                ><span class="reply-operate" @click="onCommentClick(item.fromUserId!, item.id!)"
-                  >回复</span
-                >
+                <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)">举报</span><span
+                  class="reply-operate" @click="onCommentClick(item.fromUserId!, item.id!)">回复</span>
                 <!-- <hr class="comment-line" /> -->
 
                 <!-- 子评论 -->
-                <div
-                  class="child-comment"
-                  v-for="(childItem, index) in item.childComments"
-                  :key="index"
-                >
+                <div class="child-comment" v-for="(childItem, index) in item.childComments" :key="index">
                   <div class="user-header">
-                    <img
-                      :src="childItem.fromUserHeadImage"
-                      alt=""
-                      style="width: 30px; max-height: 30px"
-                    />
+                    <img :src="childItem.fromUserHeadImage" alt="" style="width: 30px; max-height: 30px" />
                     <span class="user-name">{{ childItem.fromUserName }}</span>
-                    <span
-                      class="reply-text"
-                      @click="onCommentClick(childItem.fromUserId!, childItem.id!)"
-                      >回复</span
-                    >
+                    <span class="reply-text" @click="onCommentClick(childItem.fromUserId!, childItem.id!)">回复</span>
                     <span class="user-name-child">{{ childItem.toUserName }}</span>
                     <span class="time">{{ childItem.createTime }}</span>
                   </div>
                   <div v-html="childItem.content" class="user-content_child"></div>
-                  <span
-                    class="report-operate"
-                    @click="onReportClick(childItem.id!, childItem.fromUserId!)"
-                    >举报</span
-                  ><span
-                    class="reply-operate"
-                    @click="onCommentClick(childItem.fromUserId!, item.id!)"
-                    >回复</span
-                  >
+                  <span class="report-operate"
+                    @click="onReportClick(childItem.id!, childItem.fromUserId!)">举报</span><span class="reply-operate"
+                    @click="onCommentClick(childItem.fromUserId!, item.id!)">回复</span>
                   <!-- <hr class="comment-line" /> -->
                 </div>
               </el-card>
@@ -343,9 +330,7 @@ const initViewer = () => {
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-        <span
-          >对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span
-        >
+        <span>对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span>
       </el-card>
     </div>
   </div>

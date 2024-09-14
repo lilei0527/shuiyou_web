@@ -87,9 +87,11 @@ function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('accountName')
   localStorage.removeItem('headImage')
+  localStorage.removeItem('userId')
   user.headImage = null
   user.accountName = null
   user.token = null
+  user.userId = null
 }
 
 function goto(path: string) {
@@ -327,7 +329,7 @@ form.example::content {
   width: 100px;
 }
 
-.username{
+.username {
   font-size: 16px;
   color: black;
   font-weight: 600;

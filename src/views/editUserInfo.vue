@@ -2,20 +2,15 @@
   <div class="my-content">
     <div class="main-content">
       <div class="user-info-form">
-        <el-form ref="ruleFormRef" :model="user" label-width="100px" :rules="rules" @input="handleInput"> 
+        <el-form ref="ruleFormRef" :model="user" label-width="100px" :rules="rules" @input="handleInput">
           <!-- 用户头像 -->
           <el-form-item label="用户头像" prop="headImage">
-            <el-upload
-              class="avatar-uploader"
-              :action="uploadUrl"
-              :headers="headers"
-              name="file"
-              :show-file-list="false"
-              :on-success="handleAvatarSuccess"
-              :before-upload="beforeAvatarUpload"
-            >
-              <img v-if="user.headImage&&user.headImage !== ''" :src="user.headImage" class="avatar" />
-              <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+            <el-upload class="avatar-uploader" :action="uploadUrl" :headers="headers" name="file"
+              :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
+              <img v-if="user.headImage && user.headImage !== ''" :src="user.headImage" class="avatar" />
+              <el-icon v-else class="avatar-uploader-icon">
+                <Plus />
+              </el-icon>
             </el-upload>
           </el-form-item>
 
@@ -35,14 +30,14 @@
 
           <!-- 保存按钮 -->
           <el-form-item>
-            <el-button  @click="submitForm" :disabled="!isFormValid">保存</el-button>
+            <el-button @click="submitForm" :disabled="!isFormValid">保存</el-button>
           </el-form-item>
         </el-form>
       </div>
     </div>
     <div class="right-content">
-        <el-card style="max-width: 100%; margin-top: 10px">
-          <span>请上传头像，大小不超过2MB<br>请填写用户名，长度在2到8个字符<br>请填写密码，长度在6到16个字符(不修改密码请留空)</span>
+      <el-card style="max-width: 100%; margin-top: 10px">
+        <span>请上传头像，大小不超过2MB<br>请填写用户名，长度在2到8个字符<br>请填写密码，长度在6到16个字符(不修改密码请留空)</span>
       </el-card>
     </div>
   </div>
@@ -55,16 +50,42 @@ import { Plus } from '@element-plus/icons-vue'
 import type { FormInstance, UploadProps } from 'element-plus'
 import { user as globalUser } from '../stores/global'
 import axios from '@/axios'; // 导入配置好的 axios 实例
+import Compressor from 'compressorjs'
+
 const handleAvatarSuccess: UploadProps['onSuccess'] = (response, uploadFile) => {
-//   user.headImage = URL.createObjectURL(uploadFile.raw!)
+  //   user.headImage = URL.createObjectURL(uploadFile.raw!)
   user.headImage = response.data
 }
 
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
-  if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error('Avatar picture size can not exceed 2MB!')
-    return false
-  }
+  //压缩
+  new Promise((resolve, reject) => {
+    new Compressor(rawFile, {
+      quality: 0.6, // 图片压缩质量，0 - 1 之间的值，值越小质量越低，文件越小
+      success(result) {
+        // result 是压缩后的 Blob 对象
+        console.log('压缩成功: ', result)
+        const compressedFile = new File([result], rawFile.name, {
+          type: result.type
+        })
+        if (compressedFile.size / 1024 / 1024 > 1) {
+          ElMessage.error('图片过大，请裁剪或者压缩后再上传')
+          return false
+        }
+        resolve(compressedFile);
+      },
+      error(err) {
+        // 处理压缩过程中出现的错误
+        console.error('压缩失败: ', err)
+        return false
+      }
+    })
+  })
+
+  // if (rawFile.size / 1024 / 1024 > 2) {
+  //   ElMessage.error('Avatar picture size can not exceed 2MB!')
+  //   return false
+  // }
   return true
 }
 
@@ -81,7 +102,7 @@ function submitForm() {
       localStorage.setItem('headImage', user.headImage || '')
       globalUser.accountName = user.accountName
       globalUser.headImage = user.headImage
-    //   user.headImage = res.data.data
+      //   user.headImage = res.data.data
       ElMessage.success('修改成功')
     } else {
       ElMessage.error(res.data.msg)
@@ -108,7 +129,7 @@ const rules = {
   headImage: [{ required: true, message: '请上传头像', trigger: 'blur' }
   ],
   accountName: [{ required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 2, max: 8, message: '长度在 2 到 8 个字符', trigger: 'blur' }
+  { min: 2, max: 8, message: '长度在 2 到 8 个字符', trigger: 'blur' }
   ],
   password: [{ validator: validatePassword, trigger: 'blur' }]
 }
@@ -117,7 +138,7 @@ const rules = {
 function validatePassword(rule: any, value: string, callback: any) {
   if (value.length !== 0 && value.length < 6) {
     callback(new Error('密码长度不能小于6位'))
-  }else if(value.length>16){
+  } else if (value.length > 16) {
     callback(new Error('密码长度不能大于16位'))
   } else {
     callback()
@@ -133,7 +154,7 @@ function handleInput() {
   }
 }
 
-var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
+var uploadUrl = import.meta.env.VITE_IMAGE_URL + "/file/upload"
 
 </script>
 
@@ -164,6 +185,7 @@ var uploadUrl = import.meta.env.VITE_IMAGE_URL+"/file/upload"
 }
 
 .el-form-item {
-  margin-bottom: 30px; /* 增大间距为 30px，可以根据需求调整 */
+  margin-bottom: 30px;
+  /* 增大间距为 30px，可以根据需求调整 */
 }
 </style>
