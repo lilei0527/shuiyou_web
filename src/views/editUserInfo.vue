@@ -30,7 +30,7 @@
 
           <!-- 保存按钮 -->
           <el-form-item>
-            <el-button @click="submitForm" :disabled="!isFormValid">保存</el-button>
+            <el-button type="primary" @click="submitForm" :disabled="!isFormValid">保存</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -57,36 +57,30 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (response, uploadFile) => 
   user.headImage = response.data
 }
 
-const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
+const beforeAvatarUpload: UploadProps['beforeUpload'] = (file: File) => {
   //压缩
-  new Promise((resolve, reject) => {
-    new Compressor(rawFile, {
-      quality: 0.6, // 图片压缩质量，0 - 1 之间的值，值越小质量越低，文件越小
+  return new Promise((resolve, reject) => {
+    // 检查文件格式是否为图片
+
+    // 使用 Compressor.js 进行图片压缩
+    new Compressor(file, {
+      quality: 0.6, // 压缩质量 0-1，1 是不压缩
       success(result) {
-        // result 是压缩后的 Blob 对象
-        console.log('压缩成功: ', result)
-        const compressedFile = new File([result], rawFile.name, {
-          type: result.type
-        })
-        if (compressedFile.size / 1024 / 1024 > 1) {
-          ElMessage.error('图片过大，请裁剪或者压缩后再上传')
-          return false
+        console.log("原文件大小：", file.size);
+        console.log("压缩后文件大小：", result.size);
+        // 返回压缩后的文件进行上传
+        if (result.size > 1 * 1024 * 1024) {
+          ElMessage.error('图片过大，请压缩或者裁剪后再上传！')
+          return reject()
         }
-        resolve(compressedFile);
+        resolve(result)
       },
       error(err) {
-        // 处理压缩过程中出现的错误
-        console.error('压缩失败: ', err)
-        return false
+        ElMessage.error('图片压缩失败')
+        reject(err)
       }
     })
   })
-
-  // if (rawFile.size / 1024 / 1024 > 2) {
-  //   ElMessage.error('Avatar picture size can not exceed 2MB!')
-  //   return false
-  // }
-  return true
 }
 
 function submitForm() {

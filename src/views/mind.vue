@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, onMounted } from 'vue'
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { Delete, Edit } from '@element-plus/icons-vue'
 import axios from '@/axios'
 import { ElMessage } from 'element-plus'
+import 'viewerjs/dist/viewer.css'
+import Viewer from 'viewerjs'
 
 interface Mind {
   id: number
@@ -43,28 +45,80 @@ function jumpToComment() {
 }
 
 function deleteMind() {
-  axios.delete('/mind', {
-    params: {
-      id: mind.id
-    }
-  }).then(res => {
-    console.log(res)
-    if (res.data.code === 200) {
-      ElMessage.success('删除成功');
-      if (myMindList.value) {
-        for (var i = 0; i < myMindList.value.length; i++) {
-          if (myMindList.value[i].id == mind.id) {
-            myMindList.value.splice(i, 1);
-            break;
+  axios
+    .delete('/mind', {
+      params: {
+        id: mind.id
+      }
+    })
+    .then((res) => {
+      console.log(res)
+      if (res.data.code === 200) {
+        ElMessage.success('删除成功')
+        if (myMindList.value) {
+          for (var i = 0; i < myMindList.value.length; i++) {
+            if (myMindList.value[i].id == mind.id) {
+              myMindList.value.splice(i, 1)
+              break
+            }
           }
         }
+      } else {
+        ElMessage.error('删除失败')
       }
-    } else {
-      ElMessage.error('删除失败');
+    })
+}
+
+// 图片加载的 Promise 逻辑
+const waitForImagesToLoad = () => {
+  const images = document.querySelectorAll('.mind_row img')
+  return Promise.all(
+    Array.from(images).map((img) => {
+      const imageElement = img as HTMLImageElement // 类型断言
+      return new Promise((resolve) => {
+        if (imageElement.complete) {
+          resolve(true)
+        } else {
+          imageElement.onload = () => resolve(true)
+          imageElement.onerror = () => resolve(true) // 即使图片加载失败也继续执行
+        }
+      })
+    })
+  )
+}
+
+// 初始化图片查看器
+const initViewer = () => {
+  const gallery = document.querySelector('.mind_row') as HTMLElement // 选择富文本容器
+  if (gallery) {
+    new Viewer(gallery, {
+      toolbar: true, // 是否显示工具栏
+      scalable: true, // 支持缩放
+      movable: true, // 支持拖动
+      zoomable: true // 支持放大
+    })
+  }
+}
+
+//添加最大宽度限制
+const addMaxWidth = () => {
+  const images = document.querySelectorAll('.mind_row img')
+  Array.from(images).map((img) => {
+    const imageElement = img as HTMLImageElement // 类型断言
+    if (imageElement) {
+      imageElement.style.maxWidth = '250px'
+      imageElement.style.height = 'auto'
     }
   })
 }
 
+onMounted(() => {
+  // 图片加载完毕后初始化图片查看器
+  waitForImagesToLoad().then(() => {
+    initViewer()
+    addMaxWidth()
+  })
+})
 </script>
 
 <template>
@@ -72,7 +126,13 @@ function deleteMind() {
     <tr class="mind_row">
       <!-- 头像 -->
       <td width="24" valign="top">
-        <img :src="mind.userHeadImage" class="avatar" width="24" style="width: 40px; max-height: 40px" alt="zj9495" />
+        <img
+          :src="mind.userHeadImage"
+          class="avatar"
+          width="24"
+          style="width: 40px; height: 40px"
+          alt="zj9495"
+        />
       </td>
       <td width="100%" valign="top" class="mind_content_col">
         <div class="fr">
@@ -80,22 +140,36 @@ function deleteMind() {
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
             <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
-            <el-popconfirm v-if="props.canEdit" title="确定要删除该项吗？" confirmButtonText="确定" cancelButtonText="取消"
-              icon="el-icon-warning" iconColor="red" @confirm="deleteMind">
+            <el-popconfirm
+              v-if="props.canEdit"
+              title="确定要删除该项吗？"
+              confirmButtonText="确定"
+              cancelButtonText="取消"
+              icon="el-icon-warning"
+              iconColor="red"
+              @confirm="deleteMind"
+            >
               <!-- 删除按钮，点击触发弹窗 -->
               <template v-slot:reference>
                 <el-button class="delete-btn" type="danger" :icon="Delete" circle size="small" />
               </template>
             </el-popconfirm>
 
-            <el-button v-if="props.canEdit" type="info" :icon="Edit" circle size="small"
-              @click="$router.push({ name: 'create_mind', query: { mindId: mind.id } })" />
+            <el-button
+              v-if="props.canEdit"
+              type="info"
+              :icon="Edit"
+              circle
+              size="small"
+              @click="$router.push({ name: 'create_mind', query: { mindId: mind.id } })"
+            />
           </span>
         </div>
-        <div class="mind_content">
+        <div v-html="mind.content" class="mind_content" @click="jumpToComment"></div>
+        <!-- <div class="mind_content">
           <span @click="jumpToComment">{{ mind.content }} </span>
-        </div>
-    <tr class="mind_images_row">
+        </div> -->
+        <!-- <tr class="mind_images_row">
       <td class="mind_images" v-for="(item, index) in imageList" :key="index">
         <div class="demo-image__preview">
           <el-image style="width: 100px; height: 100px" :src="item" :preview-src-list="imageList"
@@ -103,8 +177,8 @@ function deleteMind() {
           </el-image>
         </div>
       </td>
-    </tr>
-    </td>
+    </tr> -->
+      </td>
     </tr>
   </table>
 </template>
@@ -160,6 +234,11 @@ table {
   cursor: pointer;
 }
 
+.mind_content_col img {
+  max-width: 250px !important; /* 限制图片的最大宽度为容器的宽度 */
+  height: auto !important; /* 自动调整高度以保持宽高比 */
+}
+
 .mind_content :hover {
   color: #f5cb2b;
 }
@@ -173,9 +252,15 @@ table {
 .delete-btn {
   margin-left: 12px;
 }
-.account-name{
+
+.account-name {
   font-size: 16px;
   color: black;
   font-weight: 600;
+}
+
+.mind_content_col img {
+  max-width: 250px !important; /* 限制图片的最大宽度为容器的宽度 */
+  height: auto !important; /* 自动调整高度以保持宽高比 */
 }
 </style>

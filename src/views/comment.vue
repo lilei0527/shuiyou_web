@@ -73,6 +73,7 @@ const getCommentList = async () => {
       // 等待所有图片加载完成后再初始化 Viewer
       await waitForImagesToLoad();
       initViewer();
+      addMaxWidth();
     });
   }
   busy.value = false
@@ -184,6 +185,7 @@ function afterSaveComment(comment: Comment) {
     // 等待所有图片加载完成后再初始化 Viewer
     await waitForImagesToLoad();
     initViewer();
+    addMaxWidth();
   });
 }
 
@@ -233,6 +235,17 @@ const initViewer = () => {
     })
   }
 }
+
+const addMaxWidth = () => {
+  const images = document.querySelectorAll('.comment-list img')
+  Array.from(images).map((img) => {
+    const imageElement = img as HTMLImageElement // 类型断言
+    if (imageElement) {
+      imageElement.style.maxWidth = '250px'
+      imageElement.style.height = 'auto'
+    }
+  })
+}
 </script>
 
 <template>
@@ -253,7 +266,7 @@ const initViewer = () => {
     <el-input type="textarea" v-model="reportText" rows="4" class="report-input" />
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="onReportCancel()">取消</el-button>
+        <el-button type="primary" @click="onReportCancel()">取消</el-button>
         <el-button type="primary" @click="report()"> 确定 </el-button>
       </div>
     </template>
@@ -295,7 +308,7 @@ const initViewer = () => {
             <div v-for="(item, index) in commentList" :key="index">
               <el-card>
                 <div class="user-header">
-                  <img :src="item.fromUserHeadImage" alt="" style="width: 40px; max-height: 40px" />
+                  <img :src="item.fromUserHeadImage" alt="" style="width: 40px; height: 40px"/>
                   <span class="user-name">{{ item.fromUserName }}</span>
                   <span class="time">{{ item.createTime }}</span>
                 </div>

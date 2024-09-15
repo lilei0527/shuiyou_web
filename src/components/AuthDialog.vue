@@ -137,7 +137,7 @@ function handleInput() {
 
     <template #footer>
       <div class="text-center">
-        <el-button @click="loginCancel"> 取消 </el-button>
+        <el-button type="primary" @click="loginCancel"> 取消 </el-button>
         <el-button type="primary" @click="login"> 登录 </el-button>
       </div>
     </template>
@@ -168,8 +168,8 @@ function handleInput() {
 
     <template #footer>
       <div class="text-center">
-        <el-button @click="registerCancel"> 取消 </el-button>
-        <el-button  @click="register" :disabled="!isRegisterFormValid"> 注册 </el-button>
+        <el-button type="primary" @click="registerCancel"> 取消 </el-button>
+        <el-button type="primary"  @click="register" :disabled="!isRegisterFormValid"> 注册 </el-button>
       </div>
     </template>
   </el-dialog>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import { ElMessage, type TabsPaneContext } from 'element-plus'
 import Mind from './mind.vue'
 import axios from '@/axios'
@@ -7,7 +7,8 @@ import { user } from '../stores/global'
 import { Edit, Delete } from '@element-plus/icons-vue'
 import CommentDialog from '../components/CommentDialog.vue'
 import router from '@/router'
-import { c } from 'node_modules/vite/dist/node/types.d-aGj9QkWt'
+import 'viewerjs/dist/viewer.css'
+import Viewer from 'viewerjs'
 
 const activeName = ref('my-mind')
 const size = 'large'
@@ -90,6 +91,11 @@ async function loadMyReplyMore(isFirst: boolean) {
     if (newItems.length < 10) {
       noMoreDataOfMyReply.value = true
     }
+    nextTick(async () => {
+      // 等待所有图片加载完成后再初始化 Viewer
+      await waitForImagesToLoad();
+      addMaxWidth();
+    });
   }
   busy.value = false
 }
@@ -115,6 +121,12 @@ async function loadReplyMyMore(isFirst: boolean) {
     if (newItems.length < 10) {
       noMoreDataOfReplyMy.value = true
     }
+    nextTick(async () => {
+      // 等待所有图片加载完成后再初始化 Viewer
+      await waitForImagesToLoad();
+      // initViewer();
+      addMaxWidth();
+    });
   }
   busy.value = false
 }
@@ -180,6 +192,59 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
     }
   })
 }
+
+
+// 图片加载的 Promise 逻辑
+const waitForImagesToLoad = () => {
+  const images = document.querySelectorAll('.my-content img')
+  return Promise.all(
+    Array.from(images).map((img) => {
+      const imageElement = img as HTMLImageElement // 类型断言
+      return new Promise((resolve) => {
+        if (imageElement.complete) {
+          resolve(true)
+        } else {
+          imageElement.onload = () => resolve(true)
+          imageElement.onerror = () => resolve(true) // 即使图片加载失败也继续执行
+        }
+      })
+    })
+  )
+}
+
+// 初始化图片查看器
+const initViewer = () => {
+  const gallery = document.querySelector('.my-content') as HTMLElement // 选择富文本容器
+  if (gallery) {
+    new Viewer(gallery, {
+      toolbar: true, // 是否显示工具栏
+      scalable: true, // 支持缩放
+      movable: true, // 支持拖动
+      zoomable: true // 支持放大
+    })
+  }
+}
+
+//添加最大宽度限制
+const addMaxWidth = () => {
+  const images = document.querySelectorAll('.my-content img')
+  Array.from(images).map((img) => {
+    const imageElement = img as HTMLImageElement // 类型断言
+    if (imageElement) {
+      imageElement.style.maxWidth = '250px'
+      imageElement.style.height = 'auto'
+    }
+  })
+}
+
+onMounted(() => {
+  nextTick(async () => {
+      // 等待所有图片加载完成后再初始化 Viewer
+      await waitForImagesToLoad();
+      initViewer();
+      addMaxWidth();
+    });
+})
 </script>
 
 <template>
@@ -220,7 +285,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
           <el-tab-pane label="我的回复" name="my-reply" v-infinite-scroll="loadMyReplyMore"
             :infinite-scroll-disabled="busy || noMoreDataOfMyReply">
             <div v-for="item in myReplyList" :key="item.id">
-              <div class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">{{ item.mindContent }}
+              <div class="mind-content" v-html="item.mindContent" @click="onContentClick(item.mindId, item.isMindDeleted)">
               </div>
               <div class="user-header">
                 <img :src="item.fromUserHeadImage" alt="" style="width: 40px; max-height: 40px" />
@@ -248,7 +313,7 @@ const onContentClick = (mindId: number, isMindDeleted: number) => {
           <el-tab-pane label="回复我的" name="reply-my" v-infinite-scroll="loadReplyMyMore"
             :infinite-scroll-disabled="busy || noMoreDataOfReplyMy">
             <div v-for="(item, index) in replyMyList" :key="index">
-              <div class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">{{ item.mindContent }}
+              <div v-html="item.mindContent" class="mind-content" @click="onContentClick(item.mindId, item.isMindDeleted)">
               </div>
               <div class="user-header">
                 <img :src="item.fromUserHeadImage" alt="" style="width: 40px; max-height: 40px" />

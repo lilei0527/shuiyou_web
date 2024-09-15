@@ -21,7 +21,7 @@
 
         <div v-if="user.token != null" class="personal-info">
           <img :src="user.headImage || '../assets/image/default_avatar.png'" class="avatar" width="24"
-            style="width: 40px; max-height: 40px" alt="头像" @mouseenter="showActions" @mouseleave="scheduleHideMenu" />
+            style="width: 40px; height: 40px;" alt="头像" @mouseenter="showActions" @mouseleave="scheduleHideMenu" />
           <span class="username" @mouseenter="showActions" @mouseleave="scheduleHideMenu">{{
             user.accountName
           }}</span>
@@ -34,7 +34,7 @@
         </div>
 
         <div v-else class="login-click">
-          <span @click="onLoginClick">立即登录</span>
+          <span @click="onLoginClick">登录</span>
         </div>
       </div>
     </div>
@@ -333,5 +333,15 @@ form.example::content {
   font-size: 16px;
   color: black;
   font-weight: 600;
+}
+
+.avatar{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login-click:hover{
+  color: #f5cb2b;
 }
 </style>
