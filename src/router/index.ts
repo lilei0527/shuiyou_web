@@ -35,6 +35,11 @@ const router = createRouter({
         name: 'editUserInfo',
         component: () => import('../views/editUserInfo.vue')
       },
+      {
+        path: '/chatView',
+        name: 'chatView',
+        component: () => import('../components/chatView.vue')
+      },
 
     ]
 

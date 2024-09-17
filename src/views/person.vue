@@ -14,7 +14,7 @@ const activeName = ref('my-mind')
 const size = 'large'
 
 const handleClick = (tab: TabsPaneContext, event: Event) => {
-  console.log(tab, event)
+  // console.log(tab, event)
 }
 
 const busy = ref(false)

@@ -66,8 +66,8 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (file: File) => {
     new Compressor(file, {
       quality: 0.6, // 压缩质量 0-1，1 是不压缩
       success(result) {
-        console.log("原文件大小：", file.size);
-        console.log("压缩后文件大小：", result.size);
+        // console.log("原文件大小：", file.size);
+        // console.log("压缩后文件大小：", result.size);
         // 返回压缩后的文件进行上传
         if (result.size > 1 * 1024 * 1024) {
           ElMessage.error('图片过大，请压缩或者裁剪后再上传！')

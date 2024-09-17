@@ -43,8 +43,8 @@ const fetchMind = async (pageNum: number, pageSize: number) => {
   try {
     const response = await axios.get('/mind/selectAll', {
       params: {
-        current: pageNum,
-        size: pageSize,
+        pageNum: pageNum,
+        pageSize: pageSize,
         typeId: typeId.value == 0 ? null : typeId.value
       }
     })
@@ -72,8 +72,8 @@ const background = ref(false)
 const disabled = ref(false)
 
 const handleSizeChange = (val: number) => {
-  console.log(`${val} items per page`)
 }
+
 const handleCurrentChange = (val: number) => {
   fetchMind(val, 10)
   scrollToTop()
@@ -123,7 +123,7 @@ function onPublishClick() {
       </div>
       <!-- 帖子列表 -->
 
-      <Mind :can-edit="false" v-for="(item, index) in mindList" :key="index" :mind="item"> </Mind>
+      <Mind :can-edit="false" v-for="(item) in mindList" :key="item.id" :mind="item"> </Mind>
       <div v-if="mindList && mindList.length == 0">
         <el-empty description="更多的帖子正在等待发布" />
       </div>

@@ -28,6 +28,7 @@
 
           <ul v-if="actionsVisible" class="action-list" @mouseenter="cancelHideMenu" @mouseleave="scheduleHideMenu">
             <li @click="goto('/person')">个人主页</li>
+            <li @click="goto('/chatView')">我的消息</li>
             <li @click="goto('/editUserInfo')">修改信息</li>
             <li @click="logout">退出登录</li>
           </ul>

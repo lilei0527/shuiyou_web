@@ -42,6 +42,8 @@ function jumpToComment() {
       id: mind.id
     }
   })
+  //滚动到最顶部
+  window.scrollTo(0, 0)
 }
 
 function deleteMind() {
@@ -52,7 +54,6 @@ function deleteMind() {
       }
     })
     .then((res) => {
-      console.log(res)
       if (res.data.code === 200) {
         ElMessage.success('删除成功')
         if (myMindList.value) {
@@ -119,9 +120,35 @@ onMounted(() => {
     addMaxWidth()
   })
 })
+
+function goto(path: string) {
+  $router.push({ path: path })
+}
+const centerDialogVisible = ref(false)
+function openChat(userId: number) {
+  centerDialogVisible.value = false
+  //扣除对应积分
+
+  
+  goto("/chatView")
+}
 </script>
 
 <template>
+  <el-dialog v-model="centerDialogVisible" title="" width="500" center class="spend-points-dialog">
+    <span class="spend-points-dialog-content">
+      将花费10积分，是否确定私聊？
+    </span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button type="primary" @click="centerDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="openChat(mind.userId)">
+          确定
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
   <table cellpadding="0" cellspacing="0" width="100%">
     <tr class="mind_row">
       <!-- 头像 -->
@@ -140,6 +167,7 @@ onMounted(() => {
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
             <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
+            <el-button type="success" plain @click="centerDialogVisible = true">私聊</el-button>
             <el-popconfirm
               v-if="props.canEdit"
               title="确定要删除该项吗？"
@@ -262,5 +290,22 @@ table {
 .mind_content_col img {
   max-width: 250px !important; /* 限制图片的最大宽度为容器的宽度 */
   height: auto !important; /* 自动调整高度以保持宽高比 */
+}
+
+.comment-num{
+  margin-right: 10px;
+}
+
+.spend-points-dialog{
+  width: 200px;
+}
+
+.spend-points-dialog-content{
+  font-size: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 20px;
 }
 </style>

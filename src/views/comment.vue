@@ -101,7 +101,8 @@ function report() {
       commentId: reportCommentId.value,
       type: reportRadio.value,
       content: reportText.value,
-      toUserId: reportUserId.value
+      toUserId: reportUserId.value,
+      mindId: mindId
     })
     .then((res) => {
       console.log(res)
@@ -129,12 +130,6 @@ function onReportCancel() {
 const comment = ref<Comment>()
 
 function onReportClick(commentId: number, userId: number) {
-  // //判断是否已登录
-  // const token = localStorage.getItem('token')
-  // if (token == null) {
-  //   showLoginDialog.value = true
-  //   return
-  // }
   reportCommentId.value = commentId
   reportUserId.value = userId
   reportDialogVisible.value = true

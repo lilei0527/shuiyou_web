@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import axios from '@/axios'
+import rawAxios from 'axios'
 import { onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
@@ -16,25 +17,25 @@ onBeforeUnmount(() => {
 const handleCreated = (editor: any) => {
   editorRef.value = editor // 记录 editor 实例，重要！
 }
-const handleChange = (editor: { getHtml: () => any }) => {
-  //   comment.value.content = editor.getHtml()
-  console.log('change:', editor.getHtml())
-}
-const handleDestroyed = (editor: any) => {
-  console.log('destroyed', editor)
-}
-const handleFocus = (editor: any) => {
-  console.log('focus', editor)
-}
-const handleBlur = (editor: any) => {
-  console.log('blur', editor)
-}
-const customAlert = (info: any, type: any) => {
-  alert(`【自定义提示】${type} - ${info}`)
-}
-const customPaste = (editor: any, event: any) => {
-  console.log('ClipboardEvent 粘贴事件对象', event)
-}
+// const handleChange = (editor: { getHtml: () => any }) => {
+//   //   comment.value.content = editor.getHtml()
+//   console.log('change:', editor.getHtml())
+// }
+// const handleDestroyed = (editor: any) => {
+//   console.log('destroyed', editor)
+// }
+// const handleFocus = (editor: any) => {
+//   console.log('focus', editor)
+// }
+// const handleBlur = (editor: any) => {
+//   console.log('blur', editor)
+// }
+// const customAlert = (info: any, type: any) => {
+//   alert(`【自定义提示】${type} - ${info}`)
+// }
+// const customPaste = (editor: any, event: any) => {
+//   console.log('ClipboardEvent 粘贴事件对象', event)
+// }
 const mode = 'default'
 
 const toolbarConfig = {
@@ -60,8 +61,8 @@ const editorConfig = {
           new Compressor(file, {
             quality: 0.6, // 压缩质量 0-1，1 是不压缩
             success(result) {
-              console.log('原文件大小：', file.size)
-              console.log('压缩后文件大小：', result.size)
+              // console.log('原文件大小：', file.size)
+              // console.log('压缩后文件大小：', result.size)
               // 返回压缩后的文件进行上传
               if (result.size > 1 * 1024 * 1024) {
                 ElMessage.error('图片过大，请压缩或者裁剪后再上传！')
@@ -71,7 +72,7 @@ const editorConfig = {
               compressFile = result
               const formData = new FormData()
               formData.append('file', compressFile)
-              axios
+              rawAxios
                 .post(uploadUrl, formData, {
                   headers: {
                     'Content-Type': 'multipart/form-data',
@@ -103,12 +104,10 @@ const editorConfig = {
     }
   },
   onFailed(file: File, res: any) {
-    // TS 语法
-    console.log(`${file.name} 上传失败`, res)
+    ElMessage.error(`上传失败：${res.message}`)
   },
   onError(file: File, err: any, res: any) {
-    // TS 语法
-    console.log(`${file.name} 上传出错`, err, res)
+    ElMessage.error(`上传出错：${err}`)
   }
 }
 
@@ -185,7 +184,7 @@ const submitComment = () => {
       commentDialogVisible.value = false
     })
     .catch(function (error) {
-      console.log(error)
+      ElMessage.error('评论失败')
     })
 }
 </script>
@@ -204,12 +203,6 @@ const submitComment = () => {
       v-model="valueHtml"
       style="height: 500px; overflow-y: hidden"
       @onCreated="handleCreated"
-      @onChange="handleChange"
-      @onDestroyed="handleDestroyed"
-      @onFocus="handleFocus"
-      @onBlur="handleBlur"
-      @customAlert="customAlert"
-      @customPaste="customPaste"
     />
     <template #footer>
       <div class="dialog-footer">
