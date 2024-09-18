@@ -75,12 +75,13 @@ export const useMessageStore = defineStore('message', {
     // 处理收到的消息
     handleIncomingMessage(messageData: [Message]) {
       const messages = []
-
-      for (const message of messageData) {
-        if (message.type == 'chat_single') {
-          messages.push(message)
-        }
+    
+      if(messageData instanceof Array){
+        for (const message of messageData) {
+            messages.push(message)
+          }
       }
+      
 
 
       // 将消息添加到消息数组中
