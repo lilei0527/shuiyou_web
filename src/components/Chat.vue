@@ -1,28 +1,18 @@
 <template>
   <div class="chat-container">
     <div class="chat-body">
-      <div
-        v-for="message in messages"
-        :key="message.id"
-      >
+      <div v-for="message in messages" :key="message.id">
 
-      <div v-if="message.fromUserId === friend!.userId" class = "message received">
-        <img
-          :src ="friend!.avatar"
-          alt=""
-          style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px"
-        />
-        <div class="message-content">{{ message.content }}</div>
-      </div>
+        <div v-if="message.fromUserId === friend!.userId" class="message received">
+          <img :src="friend!.avatar" alt="" style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px" />
+          <div class="message-content">{{ message.content }}</div>
+        </div>
 
-      <div v-else class = "message sent">
-        <div class="message-content">{{ message.content }}</div>
-        <img
-          :src ="user.headImage!"
-          alt=""
-          style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px"
-        />
-      </div>
+        <div v-else class="message sent">
+          <div class="message-content">{{ message.content }}</div>
+          <img :src="user.headImage!" alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px" />
+        </div>
       </div>
 
       <!-- <div class="message received">
@@ -36,8 +26,8 @@
     </div>
     <div class="chat-footer">
       <!-- <input type="textarea" placeholder="输入消息..." /> -->
-      <textarea placeholder="请输入内容..."></textarea>
-      <button class="send-btn" style="height: 40px">发送</button>
+      <textarea placeholder="请输入内容..." v-model="content"></textarea>
+      <button class="send-btn" style="height: 40px" @click="sendMessage()">发送</button>
     </div>
   </div>
 </template>
@@ -47,14 +37,20 @@ import { onMounted, ref, watch } from 'vue'
 import axios from '@/axios'
 import { ElMessage } from 'element-plus'
 import { user } from '../stores/global'
+import { useMessageStore } from '../stores/message'
+
 
 interface Message {
-  id: number
-  fromUserId: number
-  toUserId: number
-  content: string
-  contentType: number
-  createTime: string
+  id: number;
+  fromUserName: string;
+  fromUserAvatar: string;
+  fromUserId: number;
+  toUserId: number;
+  content: string;
+  createTime: string;
+  token: string;
+  contentType: number;
+  type: string;
 }
 
 interface Friend {
@@ -70,6 +66,7 @@ const props = defineProps<{
 const friend = ref(props.friend)
 
 const messages = ref<Message[]>([])
+const content = ref('')
 
 // 监听 props 变化，以便每次打开弹窗时更新输入框内容
 watch(
@@ -78,6 +75,19 @@ watch(
     if (newFriend != null) {
       friend.value = newFriend
       loadHistoryMessages()
+    }
+  }
+)
+
+const messageStore = useMessageStore()
+//监听消息
+watch(
+  () => messageStore.messages,
+  (newMessages) => {
+    for (const message of newMessages) {
+      if (message.fromUserId == friend.value?.userId) {
+        messages.value.push(message)
+      }
     }
   }
 )
@@ -106,6 +116,45 @@ function loadHistoryMessages() {
         ElMessage.error(res.data.message)
       }
     })
+}
+
+
+
+//发送消息
+function sendMessage() {
+  if (friend.value == null) {
+    // 只需检查是否为 null 或 undefined
+    return
+  }
+
+  if (content.value.trim() === '') {
+    ElMessage.error('消息不能为空')
+    return
+  }
+
+  const message = {
+    toUserId: friend.value.userId,
+    content: content.value,
+    contentType: 1,
+    token: user.token!,
+    type: 'chat_single'
+  }
+
+  const messageStore = useMessageStore();
+  messageStore.websocket?.send(JSON.stringify(message))
+
+  //添加到本地消息列表
+  const newMessage = {
+    id: 0,
+    fromUserId: parseInt(user.userId!),
+    toUserId: friend.value.userId,
+    content: content.value,
+    contentType: 1,
+    createTime: new Date().toLocaleString(),
+  }
+  messages.value.push(newMessage)
+  content.value = ''
+
 }
 </script>
 
@@ -159,8 +208,8 @@ function loadHistoryMessages() {
   max-width: 70%;
 }
 
-.message img{
-    margin: 0 10px 0 10px;
+.message img {
+  margin: 0 10px 0 10px;
 }
 
 .avatar {
@@ -204,6 +253,5 @@ function loadHistoryMessages() {
   cursor: pointer;
 }
 
-.send-btn {
-}
+.send-btn {}
 </style>

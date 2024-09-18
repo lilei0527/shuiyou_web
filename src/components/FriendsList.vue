@@ -1,20 +1,11 @@
 <template>
   <div class="friends-list">
     <ul>
-      <li
-        class="friend-item"
-        v-for="(friend, index) in friends"
-        :key="index"
-        :class="{ active: selectedFriend === friend }"
-        @click="selectFriend(friend)"
-      >
+      <li class="friend-item" v-for="(friend, index) in friends" :key="index"
+        :class="{ active: selectedFriend === friend }" @click="selectFriend(friend)">
         <el-badge :value="friend.unRead" class="item" :show-zero="false" :max="99">
-          <img
-            :src="friend.avatar"
-            alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd"
-            class="friend-avatar"
-          />
+          <img :src="friend.avatar" alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd" class="friend-avatar" />
         </el-badge>
         <span class="friend-name"> {{ friend.name }} </span>
       </li>
@@ -23,10 +14,11 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { defineEmits } from 'vue'
 import axios from '@/axios'
 import { ElMessage } from 'element-plus'
+import { useMessageStore } from '../stores/message'
 
 interface Friend {
   userId: number
@@ -40,6 +32,28 @@ const props = defineProps<{ userId: number }>()
 const friends = ref<Friend[]>()
 const selectedFriend = ref<Friend | null>(null)
 const emits = defineEmits(['select-friend'])
+const messageStore = useMessageStore()
+
+
+//监听消息
+watch(
+  () => messageStore.messages,
+  (newMessages) => {
+    for (const message of newMessages) {
+      var isNew = true;
+      for (const friend of friends.value!) {
+        if (message.fromUserId == friend.userId) {
+          friend.unRead += 1
+          isNew = false;
+        }
+      }
+      if (isNew) {
+        friends.value?.push({ userId: message.fromUserId, name: message.fromUserName, avatar: message.fromUserAvatar, unRead: 1 })
+      }
+    }
+  }
+)
+
 
 function selectFriend(friend: Friend) {
   selectedFriend.value = friend
