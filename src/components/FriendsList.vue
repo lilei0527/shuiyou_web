@@ -1,22 +1,25 @@
 <template>
   <div class="friends-list">
     <ul>
-      <li
-        class="friend-item"
-        v-for="(friend, index) in friends"
-        :key="index"
-        :class="{ active: selectedFriend === friend }"
-        @click="selectFriend(friend)"
-      >
-        <el-badge :value="friend.unRead" class="item" :show-zero="false" :max="99">
-          <img
-            :src="friend.avatar"
-            alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd"
-            class="friend-avatar"
-          />
+      <li class="friend-item" v-for="(friend, index) in friends" :key="index"
+        :class="{ friendChoose: selectedFriend === friend }" @click="selectFriend(friend)">
+
+        <el-badge :value="friend.unRead" class="friend-image" :show-zero="false" :max="99">
+          <img :src="friend.avatar" alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd" class="friend-avatar" />
         </el-badge>
-        <span class="friend-name"> {{ friend.name }} </span>
+
+
+        <div class="friend-info">
+          <span class="friend-name"> {{ friend.name }} </span>
+          <span class="friend-last-content"> {{ friend.lastContent }} </span>
+        </div>
+
+        <div class="friend-tail">
+          <el-tag v-if="friend.isOnline" key="在线" type="success" effect="dark" round size="small">在线</el-tag>
+          <el-tag v-else key="离线" type="danger" effect="dark" round size="small">离线</el-tag>
+          <span class="friend-update-time"> {{ formatTime(friend.updateTime) }} </span>
+        </div>
       </li>
     </ul>
   </div>
@@ -34,6 +37,9 @@ interface Friend {
   name: string
   avatar: string
   unRead: number
+  isOnline: boolean
+  lastContent: string
+  updateTime: string
 }
 
 const props = defineProps<{ userId: number }>()
@@ -54,6 +60,9 @@ watch(
           if (message.fromUserId != selectedFriend.value?.userId) {
             friend.unRead += 1
           }
+          friend.updateTime = message.createTime
+          friend.lastContent = message.content
+          friend.isOnline = true
           isNew = false
         }
       }
@@ -62,12 +71,34 @@ watch(
           userId: message.fromUserId,
           name: message.fromUserName,
           avatar: message.fromUserAvatar,
-          unRead: 1
+          unRead: 1,
+          lastContent: message.content,
+          updateTime: message.createTime,
+          isOnline: true
         })
       }
     }
   }
 )
+
+function formatTime(time: string) {
+  const now = new Date();
+  const date = new Date(time);
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diff < 600) {
+    return '刚刚';
+  } else if (diff < 86400) {
+    return date.getHours() + ':' + date.getMinutes();
+  } else {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${year}/${month}/${day}日`;
+  }
+}
+
+
 
 function selectFriend(friend: Friend) {
   selectedFriend.value = friend
@@ -131,29 +162,62 @@ li {
   cursor: pointer;
 }
 
-.friend-item.active {
-  /* 下划线 */
-  text-decoration: underline;
-  color: #f5cb2b;
-  font-size: 17px;
+li:hover {
+  background-color: #e4dede;
 }
 
 .friend-item {
   display: flex;
+  font-size: 16px;
+  /* align-items: center; */
+}
+
+.friend-item.hover {
+  background-color: #c25617;
+}
+
+
+.friend-name {
+  display: flex;
+  width: 100px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: ellipsis;
+  text-overflow: ellipsis;
+  font-weight: bold;
+  align-items: flex-start;
+}
+
+.friend-last-content {
+  display: flex;
+  width: 100px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-items: flex-start;
+  color: #999;
+}
+
+.friend-info {
+  /* width: 200px; */
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+}
+
+.friend-update-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.friend-image {
+  display: flex;
+  justify-content: center;
   align-items: center;
 }
 
-.friend-avatar {
-  /* margin-right: 10px; */
-}
-
-/* .item {
-  margin-top: 10px;
-  margin-right: 30px;
-} */
-
-.friend-name {
-  margin-left: 20px;
-  font-weight: bold;
+.friendChoose {
+  background-color: #e4dede;
 }
 </style>

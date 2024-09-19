@@ -118,7 +118,7 @@ function onPublishClick() {
     <div class="main-content">
       <!-- 类型导航 -->
       <div class="navigation" style="flex-wrap: nowrap">
-        <a class="navigation-item" href="#/" @click="typeClick(item.id)" :class="{ active: isActive == item.id }"
+        <a class="navigation-item" href="#/" @click="typeClick(item.id)" :class="{ typeActive: isActive == item.id }"
           v-for="(item, index) in typeList" :key="index">{{ item?.name }}</a>
       </div>
       <!-- 帖子列表 -->
@@ -194,7 +194,7 @@ function onPublishClick() {
   height: 100px;
 }
 
-.active {
+.typeActive {
   color: #f5cb2b;
   font-size: 22px;
 }
