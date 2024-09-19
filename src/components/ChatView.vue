@@ -33,7 +33,7 @@ function handleSelectFriend(friend: Friend) {
 <style scoped>
 .container {
   display: flex;
-  height: 600px;
+  height: 700px;
   width: 1200px;
   margin-left: auto;
   margin-right: auto;

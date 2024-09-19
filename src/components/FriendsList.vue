@@ -1,14 +1,21 @@
 <template>
   <div class="friends-list">
     <ul>
-      <li class="friend-item" v-for="(friend, index) in friends" :key="index"
-        :class="{ friendChoose: selectedFriend === friend }" @click="selectFriend(friend)">
-
+      <li
+        class="friend-item"
+        v-for="(friend, index) in friends"
+        :key="index"
+        :class="{ friendChoose: selectedFriend === friend }"
+        @click="selectFriend(friend)"
+      >
         <el-badge :value="friend.unRead" class="friend-image" :show-zero="false" :max="99">
-          <img :src="friend.avatar" alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd" class="friend-avatar" />
+          <img
+            :src="friend.avatar"
+            alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd"
+            class="friend-avatar"
+          />
         </el-badge>
-
 
         <div class="friend-info">
           <span class="friend-name"> {{ friend.name }} </span>
@@ -16,7 +23,9 @@
         </div>
 
         <div class="friend-tail">
-          <el-tag v-if="friend.isOnline" key="在线" type="success" effect="dark" round size="small">在线</el-tag>
+          <el-tag v-if="friend.isOnline" key="在线" type="success" effect="dark" round size="small"
+            >在线</el-tag
+          >
           <el-tag v-else key="离线" type="danger" effect="dark" round size="small">离线</el-tag>
           <span class="friend-update-time"> {{ formatTime(friend.updateTime) }} </span>
         </div>
@@ -31,6 +40,7 @@ import { defineEmits } from 'vue'
 import axios from '@/axios'
 import { ElMessage } from 'element-plus'
 import { useMessageStore } from '../stores/message'
+import { e } from 'unocss'
 
 interface Friend {
   userId: number
@@ -54,51 +64,70 @@ watch(
   () => messageStore.messages,
   (newMessages) => {
     for (const message of newMessages) {
-      var isNew = true
-      for (const friend of friends.value!) {
-        if (message.fromUserId == friend.userId) {
-          if (message.fromUserId != selectedFriend.value?.userId) {
-            friend.unRead += 1
+      if (message.type == 'chat_single') {
+        var isNew = true
+        for (const friend of friends.value!) {
+          if (message.fromUserId == friend.userId) {
+            if (message.fromUserId != selectedFriend.value?.userId) {
+              friend.unRead += 1
+            }
+            friend.updateTime = message.createTime
+            if(message.contentType==1){
+                friend.lastContent = message.content
+            }else{
+                friend.lastContent = '[图片]'
+            }
+            friend.isOnline = true
+            isNew = false
+            break
           }
-          friend.updateTime = message.createTime
-          friend.lastContent = message.content
-          friend.isOnline = true
-          isNew = false
         }
-      }
-      if (isNew) {
-        friends.value?.push({
-          userId: message.fromUserId,
-          name: message.fromUserName,
-          avatar: message.fromUserAvatar,
-          unRead: 1,
-          lastContent: message.content,
-          updateTime: message.createTime,
-          isOnline: true
-        })
+        if (isNew) {
+          friends.value?.push({
+            userId: message.fromUserId,
+            name: message.fromUserName,
+            avatar: message.fromUserAvatar,
+            unRead: 1,
+            lastContent: message.content,
+            updateTime: message.createTime,
+            isOnline: true
+          })
+        }
+      }else if (message.type == 'online') {
+        for (const friend of friends.value!) {
+          if (message.fromUserId == friend.userId) {
+            friend.isOnline = true
+            break
+          }
+        }
+      }else if (message.type == 'offline') {
+        for (const friend of friends.value!) {
+          if (message.fromUserId == friend.userId) {
+            friend.isOnline = false
+            break
+          }
+        }
       }
     }
   }
 )
 
 function formatTime(time: string) {
-  const now = new Date();
-  const date = new Date(time);
-  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const now = new Date()
+  const date = new Date(time)
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
 
   if (diff < 600) {
-    return '刚刚';
+    return '刚刚'
   } else if (diff < 86400) {
-    return date.getHours() + ':' + date.getMinutes();
+    return date.getHours() + ':' + date.getMinutes()
   } else {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${year}/${month}/${day}日`;
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    return `${year}/${month}/${day}`
   }
 }
-
-
 
 function selectFriend(friend: Friend) {
   selectedFriend.value = friend
@@ -120,6 +149,12 @@ function loadFriends() {
   axios.get('/friend/getAll').then((res) => {
     if (res.data.code === 200) {
       friends.value = res.data.data
+
+      friends.value?.forEach((item) => {
+        if (item.lastContent.startsWith('http')) {
+            item.lastContent = '[图片]'
+        }
+      })
 
       friends.value?.forEach((item) => {
         if (item.userId === props.userId) {
@@ -176,34 +211,38 @@ li:hover {
   background-color: #c25617;
 }
 
-
 .friend-name {
-  display: flex;
-  width: 100px;
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: ellipsis;
-  text-overflow: ellipsis;
-  font-weight: bold;
-  align-items: flex-start;
-}
-
-.friend-last-content {
-  display: flex;
-  width: 100px;
+  flex: 1;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  align-items: flex-start;
+  font-weight: bold;
+  text-align: left;
+}
+
+.friend-last-content {
+  flex: 1;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
   color: #999;
 }
 
 .friend-info {
-  /* width: 200px; */
+  width: 110px;
   display: flex;
   flex-direction: column;
   margin-left: 10px;
+  justify-content: center;
+}
+
+.friend-tail{
+    display: flex;
+    flex-direction: column;
+  justify-content: center;
 }
 
 .friend-update-time {
