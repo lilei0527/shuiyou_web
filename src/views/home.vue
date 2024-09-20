@@ -1,6 +1,7 @@
 <template>
   <!-- <img src="./assets/logo.png">
       <router-view/> -->
+  <ChatView v-if="messageStore.chatVisible" v-model:userId="messageStore.chatUserId"></ChatView>
   <AuthDialog v-model:isLoginDialogVisible="isLogin" />
 
   <el-backtop :right="100" :bottom="100" />
@@ -21,14 +22,16 @@
 
         <div v-if="user.token != null" class="personal-info">
           <img :src="user.headImage || '../assets/image/default_avatar.png'" class="avatar" width="24"
-            style="width: 40px; height: 40px;" alt="头像" @mouseenter="showActions" @mouseleave="scheduleHideMenu" />
+            style="width: 40px; height: 40px; " alt="头像" @mouseenter="showActions" @mouseleave="scheduleHideMenu" />
           <span class="username" @mouseenter="showActions" @mouseleave="scheduleHideMenu">{{
             user.accountName
           }}</span>
+          <el-badge :value="messageStore.unreadCount" class="friend-image" :show-zero="false" :max="99" :size="size">
+            <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="">
+          </el-badge>
 
           <ul v-if="actionsVisible" class="action-list" @mouseenter="cancelHideMenu" @mouseleave="scheduleHideMenu">
             <li @click="goto('/person')">个人主页</li>
-            <li @click="goto('/chatView')">我的消息</li>
             <li @click="goto('/editUserInfo')">修改信息</li>
             <li @click="logout">退出登录</li>
           </ul>
@@ -46,14 +49,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { user } from '../stores/global'
 import { isLogin } from '../stores/global'
 import AuthDialog from '../components/AuthDialog.vue'
 import { useRouter } from 'vue-router'
 import Footer from '../components/Footer.vue';
+import { useMessageStore } from '../stores/message'
+import axios from '@/axios'
+import ChatView from '@/components/chatView.vue'
 
-var hideMenuTimeout: number | null | undefined
+var hideMenuTimeout: any
+const messageStore = useMessageStore()
+const size = "samll"
+
+
 
 function showActions() {
   actionsVisible.value = true
@@ -98,6 +108,20 @@ function logout() {
 function goto(path: string) {
   $router.push({ path: path })
 }
+
+function openChat() {
+  messageStore.chatVisible = true
+}
+
+function getUnreadCount() {
+  axios.get('/message/getUnreadCount').then(res => {
+    messageStore.unreadCount = res.data.data
+  })
+}
+
+onMounted(() => {
+  getUnreadCount()
+})
 
 const activeIndex2 = ref('1')
 const $router = useRouter()
@@ -336,13 +360,27 @@ form.example::content {
   font-weight: 600;
 }
 
-.avatar{
+.avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.login-click:hover{
+.login-click:hover {
   color: #f5cb2b;
+}
+
+.message_icon {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  transform: scale(1);
+}
+
+.message_icon:hover {
+  cursor: pointer;
+  /* width: 30px;
+  height: 30px; */
+  transform: scale(1.5);
 }
 </style>

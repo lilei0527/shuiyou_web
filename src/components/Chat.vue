@@ -2,21 +2,13 @@
   <div class="chat-container">
     <div class="chat-body" ref="chatList" @scroll="handleScroll">
       <div v-for="(message, index) in messages" :key="message.id">
-        <span
-          v-if="
-            index == 0 || !isFiveMinutesApart(messages[index - 1].createTime, message.createTime)
-          "
-          class="message-time"
-          >{{ message.createTime }}</span
-        >
+        <span v-if="
+          index == 0 || !isFiveMinutesApart(messages[index - 1].createTime, message.createTime)
+        " class="message-time">{{ message.createTime }}</span>
 
         <div v-if="message.fromUserId === friend!.userId" class="message received">
-          <img
-            :src="friend!.avatar"
-            alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px"
-          />
-          
+          <img :src="friend!.avatar" alt="" style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px" />
+
           <div v-if="message.contentType === 1" class="message-content">{{ message.content }}</div>
           <div v-else-if="message.contentType === 2" class="message-content-img">
             <img :src="message.content" alt="" style="width: 100px; height: auto" />
@@ -24,21 +16,18 @@
         </div>
 
         <div v-else class="message sent">
-            <div v-if="message.contentType === 1" class="message-content">{{ message.content }}</div>
+          <div v-if="message.contentType === 1" class="message-content">{{ message.content }}</div>
           <div v-else-if="message.contentType === 2" class="message-content-img">
             <img :src="message.content" alt="" style="width: 100px; height: auto" />
           </div>
-          <img
-            :src="user.headImage!"
-            alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px"
-          />
+          <img :src="user.headImage!" alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px" />
         </div>
 
       </div>
     </div>
     <div class="chat-footer">
-        <div class="toolbar">
+      <div class="toolbar">
         <!-- 图片上传按钮 -->
         <button @click="triggerFileInput" class="photo-btn">
           <img src="../assets/svg/photo.svg" alt="上传图片" style="width: 20px; height: 20px;" />
@@ -46,17 +35,19 @@
         <!-- 隐藏的文件选择器 -->
         <input type="file" ref="fileInput" style="display: none" @change="handleImageUpload" />
       </div>
-      <textarea class="input-area" placeholder="请输入内容..." v-model="content"></textarea>
+      <textarea class="input-area" placeholder="请输入内容... Enter发送消息,Shift+Enter换行" v-model="content"
+        @keydown="handleKeyDown"></textarea>
       <div class="send-btn-container">
-        <button class="send-btn" style="height: 40px" @click="sendMessage(content,1)">发送</button>
+        <button :disabled="isDisabled" class="send-btn" style="height: 40px"
+          @click="sendMessage(content, 1)">发送</button>
       </div>
-      
+
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import axios from '@/axios'
 import { ElMessage } from 'element-plus'
 import { user } from '../stores/global'
@@ -94,9 +85,8 @@ var pageSize = 10
 const messages = ref<Message[]>([])
 const content = ref('')
 const chatList = ref<HTMLElement | null>(null)
-    const fileInput = ref<HTMLInputElement | null>(null);
-
-
+const fileInput = ref<HTMLInputElement | null>(null);
+const isDisabled = computed(() => content.value.trim() === '');
 var isNearBottom = true // 判断是否接近底部的标志
 const loading = ref(false) // 防止重复加载的标志
 const hasMoreMessages = ref(true) // 判断是否还有更多历史消息
@@ -121,6 +111,16 @@ function reset() {
   loading.value = false
   content.value = ''
   isNearBottom = true
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    sendMessage(content.value, 1)
+  } else if (event.key === 'Enter' && event.shiftKey) {
+    event.preventDefault()
+    content.value += '\n'
+  }
 }
 
 const messageStore = useMessageStore()
@@ -171,51 +171,51 @@ const handleImageUpload = (event: Event) => {
 
 var uploadUrl = import.meta.env.VITE_IMAGE_URL + '/file/upload'
 function uploadImage(file: File) {
-        var compressFile
-        new Promise((resolve, reject) => {
-          // 使用 Compressor.js 进行图片压缩
-          new Compressor(file, {
-            quality: 0.6, // 压缩质量 0-1，1 是不压缩
-            success(result) {
-              // console.log('原文件大小：', file.size)
-              // console.log('压缩后文件大小：', result.size)
-              // 返回压缩后的文件进行上传
-              if (result.size > 1 * 1024 * 1024) {
-                ElMessage.error('图片过大，请压缩或者裁剪后再上传！')
-                return reject()
-              }
-              resolve(result)
-              compressFile = result
-              const formData = new FormData()
-              formData.append('file', compressFile)
-              rawAxios
-                .post(uploadUrl, formData, {
-                  headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: localStorage.getItem('token')
-                  }
-                })
-                .then((res) => {
-                  const response = res.data
-                  if (response.code === 200) {
-                    // 从返回的数据中获取图片 URL
-                    const url = response.data
-                    sendMessage(url,2)
-                  } else {
-                    console.error('图片上传失败：', response.message)
-                  }
-                })
-                .catch((error) => {
-                  console.error('图片上传失败：', error)
-                })
-            },
-            error(err) {
-              ElMessage.error('图片压缩失败')
-              reject(err)
+  var compressFile
+  new Promise((resolve, reject) => {
+    // 使用 Compressor.js 进行图片压缩
+    new Compressor(file, {
+      quality: 0.6, // 压缩质量 0-1，1 是不压缩
+      success(result) {
+        // console.log('原文件大小：', file.size)
+        // console.log('压缩后文件大小：', result.size)
+        // 返回压缩后的文件进行上传
+        if (result.size > 1 * 1024 * 1024) {
+          ElMessage.error('图片过大，请压缩或者裁剪后再上传！')
+          return reject()
+        }
+        resolve(result)
+        compressFile = result
+        const formData = new FormData()
+        formData.append('file', compressFile)
+        rawAxios
+          .post(uploadUrl, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: localStorage.getItem('token')
             }
           })
-        })
+          .then((res) => {
+            const response = res.data
+            if (response.code === 200) {
+              // 从返回的数据中获取图片 URL
+              const url = response.data
+              sendMessage(url, 2)
+            } else {
+              console.error('图片上传失败：', response.message)
+            }
+          })
+          .catch((error) => {
+            console.error('图片上传失败：', error)
+          })
+      },
+      error(err) {
+        ElMessage.error('图片压缩失败')
+        reject(err)
       }
+    })
+  })
+}
 
 function formatTimestamp(timestamp: string) {
   const date = new Date(timestamp)
@@ -304,9 +304,12 @@ function loadMoreMessages() {
         }
 
         loading.value = false
-        // nextTick(() => {
-        //   scrollToBottom()
-        // })
+        if (pageNum == 1) {
+          nextTick(() => {
+            scrollToBottom()
+          })
+        }
+
       } else {
         ElMessage.error(res.data.message)
       }
@@ -314,7 +317,7 @@ function loadMoreMessages() {
 }
 
 //发送消息
-function sendMessage(sendContent:string,contentType:number) {
+function sendMessage(sendContent: string, contentType: number) {
   if (friend.value == null) {
     // 只需检查是否为 null 或 undefined
     return
@@ -350,7 +353,7 @@ function sendMessage(sendContent:string,contentType:number) {
     token: user.token!
   }
   messages.value.push(newMessage)
-  if(contentType===1){
+  if (contentType === 1) {
     content.value = ''
   }
 
@@ -366,17 +369,10 @@ function sendMessage(sendContent:string,contentType:number) {
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 1200px;
+  width: 100%;
   border: 1px solid #ddd;
   border-radius: 10px;
   overflow: hidden;
-}
-
-.chat-header {
-  background: #007bff;
-  color: #fff;
-  padding: 10px;
-  text-align: center;
 }
 
 .chat-body {
@@ -384,6 +380,17 @@ function sendMessage(sendContent:string,contentType:number) {
   padding: 20px 10px 10px 10px;
   overflow-y: auto;
   background: white;
+}
+
+.chat-footer {
+  flex-direction: column;
+  height: 150px;
+  display: flex;
+  padding: 10px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  /* align-items: center; */
+
 }
 
 .message {
@@ -408,7 +415,7 @@ function sendMessage(sendContent:string,contentType:number) {
 .message-content {
   padding: 10px;
   border-radius: 10px;
-  max-width: 70%;
+  max-width: 60%;
 }
 
 .message img {
@@ -427,16 +434,7 @@ function sendMessage(sendContent:string,contentType:number) {
   margin: 0 10px;
 }
 
-.chat-footer {
-  flex-direction: column;
-  height: 150px;
-  display: flex;
-  padding: 10px;
-  background: #fff;
-  border-top: 1px solid #ddd;
-  /* align-items: center; */
-  
-}
+
 
 .toolbar {
   display: flex;
@@ -450,7 +448,7 @@ function sendMessage(sendContent:string,contentType:number) {
   border: none;
   resize: none;
   outline: none;
-  font-size: 16px;
+  font-size: 14px;
   overflow: auto;
 }
 
@@ -468,16 +466,24 @@ function sendMessage(sendContent:string,contentType:number) {
   color: #999;
 }
 
-.photo-btn{
-    background: white;
+.photo-btn {
+  background: white;
 }
 
-.send-btn{
-    width: 50px;
-    background: #007bff;
+
+.send-btn {
+  width: 50px;
+  background: #007bff;
 }
-.send-btn-container{
-    display: flex;
-    justify-content: flex-end;
+
+.send-btn:disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.send-btn-container {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

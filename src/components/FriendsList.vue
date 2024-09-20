@@ -1,20 +1,11 @@
 <template>
   <div class="friends-list">
     <ul>
-      <li
-        class="friend-item"
-        v-for="(friend, index) in friends"
-        :key="index"
-        :class="{ friendChoose: selectedFriend === friend }"
-        @click="selectFriend(friend)"
-      >
+      <li class="friend-item" v-for="(friend, index) in friends" :key="index"
+        :class="{ friendChoose: selectedFriend === friend }" @click="selectFriend(friend)">
         <el-badge :value="friend.unRead" class="friend-image" :show-zero="false" :max="99">
-          <img
-            :src="friend.avatar"
-            alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd"
-            class="friend-avatar"
-          />
+          <img :src="friend.avatar" alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd" class="friend-avatar" />
         </el-badge>
 
         <div class="friend-info">
@@ -23,9 +14,7 @@
         </div>
 
         <div class="friend-tail">
-          <el-tag v-if="friend.isOnline" key="在线" type="success" effect="dark" round size="small"
-            >在线</el-tag
-          >
+          <el-tag v-if="friend.isOnline" key="在线" type="success" effect="dark" round size="small">在线</el-tag>
           <el-tag v-else key="离线" type="danger" effect="dark" round size="small">离线</el-tag>
           <span class="friend-update-time"> {{ formatTime(friend.updateTime) }} </span>
         </div>
@@ -40,7 +29,7 @@ import { defineEmits } from 'vue'
 import axios from '@/axios'
 import { ElMessage } from 'element-plus'
 import { useMessageStore } from '../stores/message'
-import { e } from 'unocss'
+const messageStore = useMessageStore()
 
 interface Friend {
   userId: number
@@ -52,12 +41,12 @@ interface Friend {
   updateTime: string
 }
 
-const props = defineProps<{ userId: number }>()
+// const props = defineProps<{ userId: number }>()
+const userId = defineModel<Number | null>('userId')
 
 const friends = ref<Friend[]>()
 const selectedFriend = ref<Friend | null>(null)
 const emits = defineEmits(['select-friend'])
-const messageStore = useMessageStore()
 
 //监听消息
 watch(
@@ -70,12 +59,15 @@ watch(
           if (message.fromUserId == friend.userId) {
             if (message.fromUserId != selectedFriend.value?.userId) {
               friend.unRead += 1
+            } else {
+              messageStore.unreadCount = messageStore.unreadCount - 1
             }
+
             friend.updateTime = message.createTime
-            if(message.contentType==1){
-                friend.lastContent = message.content
-            }else{
-                friend.lastContent = '[图片]'
+            if (message.contentType == 1) {
+              friend.lastContent = message.content
+            } else {
+              friend.lastContent = '[图片]'
             }
             friend.isOnline = true
             isNew = false
@@ -93,14 +85,14 @@ watch(
             isOnline: true
           })
         }
-      }else if (message.type == 'online') {
+      } else if (message.type == 'online') {
         for (const friend of friends.value!) {
           if (message.fromUserId == friend.userId) {
             friend.isOnline = true
             break
           }
         }
-      }else if (message.type == 'offline') {
+      } else if (message.type == 'offline') {
         for (const friend of friends.value!) {
           if (message.fromUserId == friend.userId) {
             friend.isOnline = false
@@ -133,14 +125,14 @@ function selectFriend(friend: Friend) {
   selectedFriend.value = friend
   emits('select-friend', friend)
 
-  //消息已读
   axios.get('/friend/read', {
     params: {
       userId: friend.userId
     }
   })
 
-  //清空未读消息
+  //消息已读
+  messageStore.unreadCount = messageStore.unreadCount - friend.unRead
   friend.unRead = 0
 }
 
@@ -152,12 +144,12 @@ function loadFriends() {
 
       friends.value?.forEach((item) => {
         if (item.lastContent.startsWith('http')) {
-            item.lastContent = '[图片]'
+          item.lastContent = '[图片]'
         }
       })
 
       friends.value?.forEach((item) => {
-        if (item.userId === props.userId) {
+        if (item.userId === userId.value) {
           selectFriend(item)
           return
         }
@@ -180,7 +172,7 @@ onMounted(() => {
 .friends-list {
   width: 320px;
   height: 100%;
-  border-right: 1px solid #ddd;
+  border: 1px solid #ddd;
   border-radius: 10px;
   padding: 20px;
   background-color: white;
@@ -239,9 +231,9 @@ li:hover {
   justify-content: center;
 }
 
-.friend-tail{
-    display: flex;
-    flex-direction: column;
+.friend-tail {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
 }
 

@@ -1,6 +1,8 @@
 import { ElMessage } from 'element-plus';
 import { defineStore } from 'pinia';
-import { e } from 'unocss';
+import { ElNotification } from 'element-plus'
+import music from '../assets/audio/recive_message.wav'
+import { ref } from 'vue';
 
 
 interface Message {
@@ -27,6 +29,8 @@ export const useMessageStore = defineStore('message', {
     websocket: null as WebSocket | null,
     messages: [] as Message[], // 存储所有收到的消息
     unreadCount: 0, // 未读消息数
+    chatUserId: null as number | null, // 当前聊天用户 ID
+    chatVisible: ref(false)
   }),
   actions: {
     // 初始化 WebSocket 连接
@@ -75,38 +79,28 @@ export const useMessageStore = defineStore('message', {
     // 处理收到的消息
     handleIncomingMessage(messageData: [Message]) {
       const messages = []
-    
-      if(messageData instanceof Array){
+
+      if (messageData instanceof Array) {
         for (const message of messageData) {
-            messages.push(message)
+          messages.push(message)
+          if (message.type === 'chat_single') {
+            ElNotification({
+              title: message.fromUserName,
+              message: !message.content.startsWith('http') ? message.content : '[图片]',
+            })
+            this.unreadCount++
+            const audio = new Audio(music);
+            audio.play();
           }
+        }
+        // 将消息添加到消息数组中
+        this.messages = messages;
       }
-      
-
-
-      // 将消息添加到消息数组中
-      this.messages = messages;
-      this.unreadCount += 1; // 增加未读消息数
-
-      // 触发语音提示或桌面通知
-      // this.notifyUser(messageData);
     },
 
     // 重置未读消息数
     resetUnreadCount() {
       this.unreadCount = 0;
     },
-
-    // 播放通知音效或者浏览器通知
-    notifyUser(messageData: Message) {
-      const audio = new Audio('notification.mp3');
-      audio.play();
-
-      if (Notification.permission === "granted") {
-        new Notification(`新消息: ${messageData.fromUserName}`, {
-          body: messageData.content,
-        });
-      }
-    }
   },
 });
