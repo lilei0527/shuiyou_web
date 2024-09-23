@@ -20,6 +20,7 @@
   --vt-c-text-dark-1: var(--vt-c-white);
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 
+  --el-button-disabled-bg-color: #404234 !important;
   --el-color-primary: #f5cb2b !important;
   --el-button-hover-rgb: #9c9639 !important;
 }
