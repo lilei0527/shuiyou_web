@@ -64,6 +64,10 @@ function onRegisterClick() {
   isLoginDialogVisible.value = false
   isRegisterDialogVisible.value = true
 }
+function onLoginClick() {
+  isLoginDialogVisible.value = true
+  isRegisterDialogVisible.value = false
+}
 
 function loginReset() {
   loginForm.account = ''
@@ -93,6 +97,7 @@ const loginForm = reactive({
 })
 
 const registerForm = reactive({
+  phone: '',
   account: '',
   code: '',
   password: '',
@@ -111,6 +116,19 @@ const rules = {
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度在 6 到 16 个字符', trigger: 'blur' }
+  ],
+
+  confirmPassword: [
+    { required: true, message: '请输入确认密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在 6 到 16 个字符', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { min: 4, max: 4, message: '验证码长度为 4', trigger: 'blur' }
   ]
 }
 
@@ -122,19 +140,40 @@ function handleInput() {
     })
   }
 }
+
+const isCodeSend = ref(false)
+const expireTime = ref(120)
+
+function sendCode() {
+  axios.post('/user/sendPhoneCode', { phone: registerForm.phone }).then((response) => {
+    if (response.data.code != 200) {
+      ElMessage.error(response.data.message)
+      return
+    } else if (response.data.code == 200) {
+      isCodeSend.value = true
+      countDown()
+    }
+  })
+}
+
+//倒计时
+function countDown() {
+  if (expireTime.value > 0) {
+    expireTime.value -= 1
+    setTimeout(() => {
+      countDown()
+    }, 1000)
+  } else {
+    isCodeSend.value = false
+    expireTime.value = 120
+  }
+}
 </script>
 
 <template>
   <!-- 登录弹窗 -->
-  <el-dialog
-    v-model="isLoginDialogVisible"
-    title="登录"
-    center
-    width="300"
-    close-on-press-escape
-    @cancel="loginCancel"
-    @closed="loginReset"
-  >
+  <el-dialog v-model="isLoginDialogVisible" title="登录" center width="300" close-on-press-escape @cancel="loginCancel"
+    @closed="loginReset">
     <el-form :model="loginForm" label-width="auto" style="max-width: 600px">
       <el-form-item label="账号">
         <el-input v-model="loginForm.account" />
@@ -155,33 +194,36 @@ function handleInput() {
     </template>
   </el-dialog>
 
-  <el-dialog
-    v-model="isRegisterDialogVisible"
-    title="注册"
-    center
-    width="400"
-    close-on-press-escape
-    @cancel="registerCancel"
-    @closed="registerReset"
-  >
+  <el-dialog v-model="isRegisterDialogVisible" title="注册" center width="400" close-on-press-escape
+    @cancel="registerCancel" @closed="registerReset">
     <div class="dialog-content">
-      <el-form
-        :model="registerForm"
-        label-width="auto"
-        style="max-width: 600px"
-        :rules="rules"
-        ref="redisterRuleFormRef"
-        @input="handleInput"
-      >
+      <el-form :model="registerForm" label-width="auto" style="max-width: 600px" :rules="rules"
+        ref="redisterRuleFormRef" @input="handleInput">
+        <el-form-item label="手机号" style="width: 90%" prop="phone">
+          <el-input v-model="registerForm.phone" />
+        </el-form-item>
+
+        <el-form-item label=" " style="width: 90%">
+          <el-button v-if="!isCodeSend" @click="sendCode" style="margin-top: 10px;">获取验证码</el-button>
+          <el-button v-else-if="isCodeSend" style="margin-top: 10px;" type="info">{{ expireTime }}</el-button>
+        </el-form-item>
+
+        <el-form-item label="验证码" style="width: 90% " prop="code">
+          <el-input v-model="registerForm.code" />
+        </el-form-item>
+
         <el-form-item label="账号" style="width: 90%" prop="account">
           <el-input v-model="registerForm.account" />
         </el-form-item>
         <el-form-item label="密码" style="width: 90%" prop="password">
           <el-input v-model="registerForm.password" type="password" />
         </el-form-item>
-        <el-form-item label="确认密码" style="width: 90%">
+        <el-form-item label="确认密码" style="width: 90%" prop="confirmPassword">
           <el-input v-model="registerForm.confirmPassword" type="password" />
         </el-form-item>
+        <div class="register-link">
+          <span>已有账号?</span><span class="to-register" @click="onLoginClick">去登录</span>
+        </div>
       </el-form>
     </div>
 
