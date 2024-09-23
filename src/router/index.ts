@@ -40,6 +40,12 @@ const router = createRouter({
         name: 'chatView',
         component: () => import('../components/ChatView.vue')
       },
+      {
+        path: '/task',
+        name: 'task',
+        component: () => import('../views/task.vue')
+      },
+      
 
     ]
 

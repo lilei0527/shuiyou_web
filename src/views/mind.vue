@@ -9,6 +9,8 @@ import 'viewerjs/dist/viewer.css'
 import Viewer from 'viewerjs'
 import { useMessageStore } from '../stores/message'
 import AuthDialog from '../components/AuthDialog.vue'
+import { user } from '@/stores/global'
+import { e } from 'unocss'
 const messageStore = useMessageStore()
 
 interface Mind {
@@ -29,7 +31,7 @@ const props = defineProps<{
 }>()
 var mind: Mind = props.mind
 const myMindList = defineModel<Array<Mind>>('myMindList')
-  const showLoginDialog = ref(false)
+const showLoginDialog = ref(false)
 
 var $router = useRouter()
 function jumpToComment() {
@@ -126,22 +128,55 @@ const centerDialogVisible = ref(false)
 //
 function openChat(userId: number) {
   centerDialogVisible.value = false
-  //扣除对应积分
 
-  //打开聊天窗口
-  messageStore.chatUserId = userId
-  messageStore.chatVisible = true
+  //是否已经是好友
+
+  //扣除对应金币,添加好友关系
+  axios
+    .post('/user/chat', {
+      toUserId: userId
+    })
+    .then((res) => {
+      if (res.data.code === 200) {
+        user.point -= 10
+        //打开聊天窗口
+        messageStore.chatUserId = userId
+        messageStore.chatVisible = true
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    })
 }
 
 //点击私聊
-function onChat(){
+function onChat() {
   //判断是否已登录
   const token = localStorage.getItem('token')
   if (token == null) {
     showLoginDialog.value = true
     return
   }
-  centerDialogVisible.value = true
+
+  //是否已经是好友
+  axios
+    .get('/friend/isAdded', {
+      params: {
+        userId: mind.userId
+      }
+    })
+    .then((res) => {
+      if (res.data.code === 200) {
+        if (res.data.data) {
+          //打开聊天窗口
+          messageStore.chatUserId = mind.userId
+          messageStore.chatVisible = true
+        } else {
+          centerDialogVisible.value = true
+        }
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    })
 }
 </script>
 
@@ -149,15 +184,11 @@ function onChat(){
   <AuthDialog v-model:isLoginDialogVisible="showLoginDialog" />
 
   <el-dialog v-model="centerDialogVisible" title="" width="500" center class="spend-points-dialog">
-    <span class="spend-points-dialog-content">
-      将花费10积分，是否确定私聊？
-    </span>
+    <span class="spend-points-dialog-content"> 将花费10金币，是否确定私聊？ </span>
     <template #footer>
       <div class="dialog-footer">
         <el-button type="primary" @click="centerDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="openChat(mind.userId)">
-          确定
-        </el-button>
+        <el-button type="primary" @click="openChat(mind.userId)"> 确定 </el-button>
       </div>
     </template>
   </el-dialog>
@@ -305,15 +336,15 @@ table {
   height: auto !important; /* 自动调整高度以保持宽高比 */
 }
 
-.comment-num{
+.comment-num {
   margin-right: 10px;
 }
 
-.spend-points-dialog{
+.spend-points-dialog {
   width: 200px;
 }
 
-.spend-points-dialog-content{
+.spend-points-dialog-content {
   font-size: 16px;
   display: flex;
   justify-content: center;

@@ -49,7 +49,7 @@ function handleClose() {
   left: 50%;
   transform: translate(-50%, -50%);
   /* margin-top: 20px; */
-  z-index: 2;
+  z-index: 100;
   position: fixed;
 }
 

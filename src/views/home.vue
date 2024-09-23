@@ -33,6 +33,7 @@
         @select="handleSelect"
       >
         <el-menu-item index="1">广场</el-menu-item>
+        <el-menu-item index="2">金币任务</el-menu-item>
       </el-menu>
       <div class="info-content">
         <!-- <div class="search bar7">
@@ -88,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { user } from '../stores/global'
 import { isLogin } from '../stores/global'
 import AuthDialog from '../components/AuthDialog.vue'
@@ -96,6 +97,8 @@ import { useRouter } from 'vue-router'
 import Footer from '../components/Footer.vue'
 import { useMessageStore } from '../stores/message'
 import ChatView from '../components/ChatView.vue'
+import axios from '@/axios'
+import { e } from 'unocss'
 
 var hideMenuTimeout: any
 const messageStore = useMessageStore()
@@ -174,8 +177,22 @@ const $router = useRouter()
 const handleSelect = (key: string, keyPath: string[]) => {
   if (key === '1') {
     $router.push({ path: '/' })
+  }else if (key === '2') {
+    $router.push({ path: '/task' })
   }
 }
+
+function getUser(){
+  axios.get('/user/info').then((res) => {
+    user.headImage = res.data.data.headImage
+    user.accountName = res.data.data.accountName
+    user.point = res.data.data.point
+  })
+}
+
+onMounted(() => {
+  getUser()
+})
 </script>
 
 <style>

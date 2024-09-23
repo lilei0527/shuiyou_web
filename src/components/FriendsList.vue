@@ -147,6 +147,17 @@ function deleteFriend(userId: number) {
     })
 }
 
+
+//监听userId
+watch(
+  () => userId.value,
+  (newUserId) => {
+    if (newUserId !== null) {
+      loadFriends()
+    }
+  }
+)
+
 //监听消息
 watch(
   () => messageStore.messages,
