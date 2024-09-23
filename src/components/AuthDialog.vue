@@ -5,6 +5,7 @@ import { reactive, ref } from 'vue'
 import { user } from '../stores/global'
 import { useMessageStore } from '../stores/message'
 
+const messageStore = useMessageStore()
 const isLoginDialogVisible = defineModel<boolean>('isLoginDialogVisible')
 const isRegisterDialogVisible = defineModel<boolean>('isRegisterDialogVisible')
 
@@ -23,11 +24,21 @@ function login() {
       user.headImage = userData.headImage
       user.token = userData.token
       user.userId = userData.userId
+      user.point = userData.point
       isLoginDialogVisible.value = false
 
       const messageStore = useMessageStore()
       messageStore.initWebSocket() // 应用加载时初始化 WebSocket
+
+      // location.reload();
+      // getUnreadCount() // 获取未读消息数量
     }
+  })
+}
+
+function getUnreadCount() {
+  axios.get('/message/getUnreadCount').then(res => {
+    messageStore.unreadCount = res.data.data
   })
 }
 

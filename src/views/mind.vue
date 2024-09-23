@@ -7,6 +7,9 @@ import axios from '@/axios'
 import { ElMessage } from 'element-plus'
 import 'viewerjs/dist/viewer.css'
 import Viewer from 'viewerjs'
+import { useMessageStore } from '../stores/message'
+import AuthDialog from '../components/AuthDialog.vue'
+const messageStore = useMessageStore()
 
 interface Mind {
   id: number
@@ -25,14 +28,8 @@ const props = defineProps<{
   canEdit: boolean
 }>()
 var mind: Mind = props.mind
-
 const myMindList = defineModel<Array<Mind>>('myMindList')
-
-var imgUrlList: String[] = []
-if (mind && mind.images != null && mind.images != '') {
-  imgUrlList = mind.images.split(';')
-}
-const imageList = ref(imgUrlList)
+  const showLoginDialog = ref(false)
 
 var $router = useRouter()
 function jumpToComment() {
@@ -125,16 +122,32 @@ function goto(path: string) {
   $router.push({ path: path })
 }
 const centerDialogVisible = ref(false)
+
+//
 function openChat(userId: number) {
   centerDialogVisible.value = false
   //扣除对应积分
 
-  
-  goto("/chatView")
+  //打开聊天窗口
+  messageStore.chatUserId = userId
+  messageStore.chatVisible = true
+}
+
+//点击私聊
+function onChat(){
+  //判断是否已登录
+  const token = localStorage.getItem('token')
+  if (token == null) {
+    showLoginDialog.value = true
+    return
+  }
+  centerDialogVisible.value = true
 }
 </script>
 
 <template>
+  <AuthDialog v-model:isLoginDialogVisible="showLoginDialog" />
+
   <el-dialog v-model="centerDialogVisible" title="" width="500" center class="spend-points-dialog">
     <span class="spend-points-dialog-content">
       将花费10积分，是否确定私聊？
@@ -167,7 +180,7 @@ function openChat(userId: number) {
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
             <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
-            <el-button type="success" plain @click="centerDialogVisible = true">私聊</el-button>
+            <el-button type="success" plain @click="onChat">私聊</el-button>
             <el-popconfirm
               v-if="props.canEdit"
               title="确定要删除该项吗？"

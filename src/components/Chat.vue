@@ -11,14 +11,14 @@
 
           <div v-if="message.contentType === 1" class="message-content">{{ message.content }}</div>
           <div v-else-if="message.contentType === 2" class="message-content-img">
-            <img :src="message.content" alt="" style="width: 100px; height: auto" />
+            <img :src="message.content" alt="" style="width: 100px; height: auto"  @click="openImagePreview(message.content)"/>
           </div>
         </div>
 
         <div v-else class="message sent">
           <div v-if="message.contentType === 1" class="message-content">{{ message.content }}</div>
           <div v-else-if="message.contentType === 2" class="message-content-img">
-            <img :src="message.content" alt="" style="width: 100px; height: auto" />
+            <img :src="message.content" alt="" style="width: 100px; height: auto"  @click="openImagePreview(message.content)"/>
           </div>
           <img :src="user.headImage!" alt=""
             style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px" />
@@ -43,6 +43,11 @@
       </div>
 
     </div>
+
+    <!-- 图片预览弹窗 -->
+    <el-dialog v-model="imageDialogVisible" style="width: 100% ;height: 100% ;"  :before-close="closeImagePreview">
+      <img :src="currentImage" alt="预览图片" style="height: 100%" />
+    </el-dialog>
   </div>
 </template>
 
@@ -90,6 +95,8 @@ const isDisabled = computed(() => content.value.trim() === '');
 var isNearBottom = true // 判断是否接近底部的标志
 const loading = ref(false) // 防止重复加载的标志
 const hasMoreMessages = ref(true) // 判断是否还有更多历史消息
+const imageDialogVisible = ref(false);  // 控制图片预览弹窗是否可见
+const currentImage = ref('');  // 当前要预览的图片
 
 // 监听 props 变化，以便每次打开弹窗时更新输入框内容
 watch(
@@ -102,6 +109,17 @@ watch(
     }
   }
 )
+
+// 关闭图片预览
+const closeImagePreview = () => {
+  imageDialogVisible.value = false;
+};
+
+// 打开图片预览
+const openImagePreview = (imageUrl: string) => {
+  currentImage.value = imageUrl;
+  imageDialogVisible.value = true;
+};
 
 function reset() {
   pageNum = 1

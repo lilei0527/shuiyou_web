@@ -1,15 +1,37 @@
 <template>
   <!-- <img src="./assets/logo.png">
       <router-view/> -->
-  <ChatView v-if="messageStore.chatVisible" v-model:userId="messageStore.chatUserId"></ChatView>
+  <ChatView v-if="user.token != null" v-show="messageStore.chatVisible" v-model:userId="messageStore.chatUserId" ></ChatView>
   <AuthDialog v-model:isLoginDialogVisible="isLogin" />
+
+  
+  <div v-if="user.token != null" class="sidebar">
+    <el-badge
+    :value="messageStore.unreadCount"
+    :show-zero="false"
+    :max="99"
+    :size="size"
+    >
+    <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
+  </el-badge>
+  <span class="sidebar-message">消息</span>
+  <hr/>
+  <img src="../assets/svg/coin.svg" alt="" class="coin_icon">
+  <span class="sidebar-message">金币 {{user.point}}</span>
+  </div>
+  
 
   <el-backtop :right="100" :bottom="100" />
   <div class="my-header">
     <div class="header-content">
       <img src="../assets/image/sy_logo.png" style="width: 80px; height: 80px" alt="logo" />
-      <el-menu style="width: 100%" :default-active="activeIndex2" class="el-menu-demo" mode="horizontal"
-        @select="handleSelect">
+      <el-menu
+        style="width: 100%"
+        :default-active="activeIndex2"
+        class="el-menu-demo"
+        mode="horizontal"
+        @select="handleSelect"
+      >
         <el-menu-item index="1">广场</el-menu-item>
       </el-menu>
       <div class="info-content">
@@ -21,16 +43,34 @@
         </div> -->
 
         <div v-if="user.token != null" class="personal-info">
-          <img :src="user.headImage || '../assets/image/default_avatar.png'" class="avatar" width="24"
-            style="width: 40px; height: 40px; " alt="头像" @mouseenter="showActions" @mouseleave="scheduleHideMenu" />
+          <img
+            :src="user.headImage || '../assets/image/default_avatar.png'"
+            class="avatar"
+            width="24"
+            style="width: 40px; height: 40px"
+            alt="头像"
+            @mouseenter="showActions"
+            @mouseleave="scheduleHideMenu"
+          />
           <span class="username" @mouseenter="showActions" @mouseleave="scheduleHideMenu">{{
             user.accountName
           }}</span>
-          <el-badge :value="messageStore.unreadCount" class="friend-image" :show-zero="false" :max="99" :size="size">
-            <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="">
-          </el-badge>
+          <!-- <el-badge
+            :value="messageStore.unreadCount"
+            class="friend-image"
+            :show-zero="false"
+            :max="99"
+            :size="size"
+          >
+            <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
+          </el-badge> -->
 
-          <ul v-if="actionsVisible" class="action-list" @mouseenter="cancelHideMenu" @mouseleave="scheduleHideMenu">
+          <ul
+            v-if="actionsVisible"
+            class="action-list"
+            @mouseenter="cancelHideMenu"
+            @mouseleave="scheduleHideMenu"
+          >
             <li @click="goto('/person')">个人主页</li>
             <li @click="goto('/editUserInfo')">修改信息</li>
             <li @click="logout">退出登录</li>
@@ -45,25 +85,21 @@
     <router-view></router-view>
     <Footer></Footer>
   </div>
-
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { user } from '../stores/global'
 import { isLogin } from '../stores/global'
 import AuthDialog from '../components/AuthDialog.vue'
 import { useRouter } from 'vue-router'
-import Footer from '../components/Footer.vue';
+import Footer from '../components/Footer.vue'
 import { useMessageStore } from '../stores/message'
-import axios from '@/axios'
-import ChatView from '@/components/chatView.vue'
+import ChatView from '../components/ChatView.vue'
 
 var hideMenuTimeout: any
 const messageStore = useMessageStore()
-const size = "samll"
-
-
+const size = 'samll'
 
 function showActions() {
   actionsVisible.value = true
@@ -99,10 +135,18 @@ function logout() {
   localStorage.removeItem('accountName')
   localStorage.removeItem('headImage')
   localStorage.removeItem('userId')
+
   user.headImage = null
   user.accountName = null
   user.token = null
   user.userId = null
+  user.point = 0
+
+  messageStore.chatVisible = false
+  messageStore.chatUserId = null
+  messageStore.websocket?.close()
+  messageStore.unreadCount = 0
+  messageStore.messages = []
 }
 
 function goto(path: string) {
@@ -113,15 +157,17 @@ function openChat() {
   messageStore.chatVisible = true
 }
 
-function getUnreadCount() {
-  axios.get('/message/getUnreadCount').then(res => {
-    messageStore.unreadCount = res.data.data
-  })
-}
+// function getUnreadCount() {
+//   axios.get('/message/getUnreadCount').then((res) => {
+//     messageStore.unreadCount = res.data.data
+//   })
+// }
 
-onMounted(() => {
-  getUnreadCount()
-})
+// onMounted(() => {
+//   if (user.token != null) {
+//     getUnreadCount()
+//   }
+// })
 
 const activeIndex2 = ref('1')
 const $router = useRouter()
@@ -189,8 +235,6 @@ table {
   border-color: gray;
   margin-top: 30px;
 }
-
-
 
 .mind_operation_row {
   display: flex;
@@ -371,16 +415,54 @@ form.example::content {
 }
 
 .message_icon {
-  width: 20px;
-  height: 20px;
-  margin-left: 10px;
+  width: 40px;
+  height: 40px;
   transform: scale(1);
 }
 
 .message_icon:hover {
   cursor: pointer;
-  /* width: 30px;
-  height: 30px; */
   transform: scale(1.5);
 }
+
+
+.coin_icon{
+  width: 40px;
+  height: 40px;
+  transform: scale(1);
+}
+
+.coin_icon:hover {
+  cursor: pointer;
+  transform: scale(1.5);
+}
+
+/* .message_icon {
+  position: fixed;
+  top: 100px;
+  left: 220px;
+  z-index: 1000;
+} */
+
+.sidebar {
+  position: fixed;
+  top: 50%;
+  right: 10px;
+  transform: translate(-5%, -50%);
+  width: auto;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 100;
+  padding: 10px;
+  border: 1px solid black;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: white;
+}
+
+
+
 </style>

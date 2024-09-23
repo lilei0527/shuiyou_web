@@ -1,11 +1,37 @@
 <template>
   <div class="friends-list">
+    <el-dialog
+      v-model="deleteDialogVishble"
+      width="400"
+      :before-close="handleClose"
+      style="border-radius: 10px"
+    >
+      <span style="font-size: 16px; font-weight: bold"
+        >确定删除好友吗?删除后将无法收到对方发来的消息</span
+      >
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="deleteDialogVishble = false" type="primary">取消</el-button>
+          <el-button type="primary" @click="deleteFriend(deleteUserId!)"> 确定 </el-button>
+        </div>
+      </template>
+    </el-dialog>
     <ul>
-      <li class="friend-item" v-for="(friend, index) in friends" :key="index"
-        :class="{ friendChoose: selectedFriend === friend }" @click="selectFriend(friend)">
+      <li
+        class="friend-item"
+        v-for="(friend, index) in friends"
+        :key="index"
+        @contextmenu="onContextMenu($event, friend.userId)"
+        :class="{ friendChoose: selectedFriend === friend }"
+        @click="selectFriend(friend)"
+      >
         <el-badge :value="friend.unRead" class="friend-image" :show-zero="false" :max="99">
-          <img :src="friend.avatar" alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd" class="friend-avatar" />
+          <img
+            :src="friend.avatar"
+            alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd"
+            class="friend-avatar"
+          />
         </el-badge>
 
         <div class="friend-info">
@@ -14,8 +40,26 @@
         </div>
 
         <div class="friend-tail">
-          <el-tag v-if="friend.isOnline" key="在线" type="success" effect="dark" round size="small">在线</el-tag>
-          <el-tag v-else key="离线" type="danger" effect="dark" round size="small">离线</el-tag>
+          <el-tag
+            v-if="friend.isOnline"
+            key="在线"
+            type="success"
+            effect="dark"
+            round
+            size="small"
+            style="width: 40px"
+            >在线</el-tag
+          >
+          <el-tag
+            v-else
+            key="离线"
+            type="danger"
+            effect="dark"
+            round
+            size="small"
+            style="width: 40px"
+            >离线</el-tag
+          >
           <span class="friend-update-time"> {{ formatTime(friend.updateTime) }} </span>
         </div>
       </li>
@@ -24,11 +68,48 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { defineEmits } from 'vue'
 import axios from '@/axios'
 import { ElMessage } from 'element-plus'
 import { useMessageStore } from '../stores/message'
+import ContextMenu from '@imengyu/vue3-context-menu'
+import { user } from '@/stores/global'
+
+const deleteDialogVishble = ref(false)
+
+const handleClose = () => {
+  deleteDialogVishble.value = false
+}
+
+function onContextMenu(e: MouseEvent, userId: number) {
+  //禁用浏览器右键菜单
+  e.preventDefault()
+
+  ContextMenu.showContextMenu({
+    x: e.x,
+    y: e.y,
+
+    items: [
+      {
+        label: '删除好友',
+        onClick: () => {
+          deleteUserId.value = userId
+          deleteDialogVishble.value = true
+        }
+      }
+      // {
+      //   label: "A submenu",
+      //   children: [
+      //     { label: "Item1" },
+      //     { label: "Item2" },
+      //     { label: "Item3" },
+      //   ]
+      // },
+    ]
+  })
+}
+
 const messageStore = useMessageStore()
 
 interface Friend {
@@ -41,12 +122,30 @@ interface Friend {
   updateTime: string
 }
 
-// const props = defineProps<{ userId: number }>()
 const userId = defineModel<Number | null>('userId')
 
 const friends = ref<Friend[]>()
 const selectedFriend = ref<Friend | null>(null)
 const emits = defineEmits(['select-friend'])
+const deleteUserId = ref<number | null>(null)
+
+function deleteFriend(userId: number) {
+  axios
+    .delete('/friend/deleteFriend', {
+      params: {
+        userId: userId
+      }
+    })
+    .then((res) => {
+      if (res.data.code === 200) {
+        ElMessage.success('删除成功')
+        deleteDialogVishble.value = false
+        friends.value = friends.value?.filter((item) => item.userId !== userId)
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    })
+}
 
 //监听消息
 watch(
@@ -111,8 +210,10 @@ function formatTime(time: string) {
 
   if (diff < 600) {
     return '刚刚'
-  } else if (diff < 86400) {
-    return date.getHours() + ':' + date.getMinutes()
+  } else if (date.getDay() == now.getDay()) {
+    return (
+      date.getHours() + ':' + (date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes())
+    )
   } else {
     const year = date.getFullYear()
     const month = date.getMonth() + 1
@@ -133,7 +234,7 @@ function selectFriend(friend: Friend) {
 
   //消息已读
   messageStore.unreadCount = messageStore.unreadCount - friend.unRead
-  friend.unRead = 0
+  selectedFriend.value.unRead = 0
 }
 
 //加载好友列表
@@ -141,12 +242,15 @@ function loadFriends() {
   axios.get('/friend/getAll').then((res) => {
     if (res.data.code === 200) {
       friends.value = res.data.data
-
+      
+      var unreadCount = 0
       friends.value?.forEach((item) => {
         if (item.lastContent.startsWith('http')) {
           item.lastContent = '[图片]'
         }
+        unreadCount += item.unRead
       })
+      messageStore.unreadCount = unreadCount
 
       friends.value?.forEach((item) => {
         if (item.userId === userId.value) {
@@ -164,7 +268,9 @@ function loadFriends() {
 }
 
 onMounted(() => {
-  loadFriends()
+  if (user.token!== null) {
+    loadFriends()
+  }
 })
 </script>
 
@@ -235,11 +341,13 @@ li:hover {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: flex-end;
 }
 
 .friend-update-time {
   font-size: 12px;
   color: #999;
+  margin-right: 5px;
 }
 
 .friend-image {

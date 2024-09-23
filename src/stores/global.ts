@@ -4,7 +4,8 @@ export const user = reactive({
     userId: localStorage.getItem('userId'),
     accountName: localStorage.getItem('accountName'),
     headImage: localStorage.getItem('headImage'),
-    token: localStorage.getItem('token')
+    token: localStorage.getItem('token'),
+    point: 0
 })
 
 export const isLogin = ref(false);

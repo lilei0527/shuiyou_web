@@ -1,7 +1,7 @@
 import { ElMessage } from 'element-plus';
 import { defineStore } from 'pinia';
 import { ElNotification } from 'element-plus'
-import music from '../assets/audio/recive_message.wav'
+import music from '../assets/audio/recive_message.wav';
 import { ref } from 'vue';
 
 
@@ -24,6 +24,8 @@ interface Response {
   data: [Message];
 }
 
+
+const wsUrl = import.meta.env.VITE_WEB_SCOKET_URL + '/channel/echo'
 export const useMessageStore = defineStore('message', {
   state: () => ({
     websocket: null as WebSocket | null,
@@ -35,7 +37,9 @@ export const useMessageStore = defineStore('message', {
   actions: {
     // 初始化 WebSocket 连接
     initWebSocket() {
-      const wsUrl = 'ws://' + 'localhost:8080/api/channel/echo';
+      //ws://localhost:8080/api
+      
+      // const wsUrl = 'ws://' + 'localhost:8080/api/channel/echo';
       this.websocket = new WebSocket(wsUrl);
 
       // WebSocket 连接打开时
@@ -67,7 +71,9 @@ export const useMessageStore = defineStore('message', {
       // WebSocket 连接关闭时
       this.websocket.onclose = () => {
         console.log('WebSocket connection closed. Reconnecting...');
-        setTimeout(() => this.initWebSocket(), 1000); // 自动重连
+        if(localStorage.getItem('token')!== null){
+            setTimeout(() => this.initWebSocket(), 1000); // 自动重连
+        }
       };
 
       // WebSocket 连接错误时
