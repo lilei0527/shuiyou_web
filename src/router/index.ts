@@ -45,6 +45,11 @@ const router = createRouter({
         name: 'task',
         component: () => import('../views/task.vue')
       },
+      {
+        path: '/coin',
+        name: 'coin',
+        component: () => import('../views/coin.vue')
+      }
       
 
     ]
