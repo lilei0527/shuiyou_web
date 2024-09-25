@@ -7,13 +7,18 @@
 
 
   <div v-if="user.token != null" class="sidebar">
-    <el-badge :value="messageStore.unreadCount" :show-zero="false" :max="99" :size="size">
-      <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
-    </el-badge>
-    <span class="sidebar-message">消息</span>
-    <hr />
-    <img src="../assets/svg/coin.svg" alt="" class="coin_icon">
-    <span class="sidebar-message">金币 {{ user.point }}</span>
+    <el-badge
+    :value="messageStore.unreadCount"
+    :show-zero="false"
+    :max="99"
+    :size="size"
+    >
+    <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
+  </el-badge>
+  <span class="sidebar-message">消息</span>
+  <hr/>
+  <img @click="gotoCoin"   src="../assets/svg/coin.svg" alt="" class="coin_icon">
+  <span class="sidebar-message">金币 {{user.point}}</span>
   </div>
 
 
@@ -145,6 +150,10 @@ function openChat() {
   messageStore.chatVisible = true
 }
 
+function gotoCoin(){
+  $router.push({ path: '/coin' })
+}
+
 // function getUnreadCount() {
 //   axios.get('/message/getUnreadCount').then((res) => {
 //     messageStore.unreadCount = res.data.data
@@ -227,16 +236,7 @@ body {
   word-break: break-word;
 }
 
-table {
-  display: flex;
-  border-collapse: separate;
-  box-sizing: border-box;
-  text-indent: initial;
-  unicode-bidi: isolate;
-  border-spacing: 2px;
-  border-color: gray;
-  margin-top: 30px;
-}
+
 
 .mind_operation_row {
   display: flex;
