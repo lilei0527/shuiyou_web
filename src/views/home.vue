@@ -1,37 +1,28 @@
 <template>
   <!-- <img src="./assets/logo.png">
       <router-view/> -->
-  <ChatView v-if="user.token != null" v-show="messageStore.chatVisible" v-model:userId="messageStore.chatUserId" ></ChatView>
+  <ChatView v-if="user.token != null" v-show="messageStore.chatVisible" v-model:userId="messageStore.chatUserId">
+  </ChatView>
   <AuthDialog v-model:isLoginDialogVisible="isLogin" />
 
-  
+
   <div v-if="user.token != null" class="sidebar">
-    <el-badge
-    :value="messageStore.unreadCount"
-    :show-zero="false"
-    :max="99"
-    :size="size"
-    >
-    <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
-  </el-badge>
-  <span class="sidebar-message">消息</span>
-  <hr/>
-  <img src="../assets/svg/coin.svg" alt="" class="coin_icon">
-  <span class="sidebar-message">金币 {{user.point}}</span>
+    <el-badge :value="messageStore.unreadCount" :show-zero="false" :max="99" :size="size">
+      <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
+    </el-badge>
+    <span class="sidebar-message">消息</span>
+    <hr />
+    <img src="../assets/svg/coin.svg" alt="" class="coin_icon">
+    <span class="sidebar-message">金币 {{ user.point }}</span>
   </div>
-  
+
 
   <el-backtop :right="100" :bottom="100" />
   <div class="my-header">
     <div class="header-content">
       <img src="../assets/image/sy_logo.png" style="width: 80px; height: 80px" alt="logo" />
-      <el-menu
-        style="width: 100%"
-        :default-active="activeIndex2"
-        class="el-menu-demo"
-        mode="horizontal"
-        @select="handleSelect"
-      >
+      <el-menu style="width: 100%" :default-active="activeIndex2" class="el-menu-demo" mode="horizontal"
+        @select="handleSelect">
         <el-menu-item index="1">广场</el-menu-item>
         <el-menu-item index="2">金币任务</el-menu-item>
       </el-menu>
@@ -44,15 +35,8 @@
         </div> -->
 
         <div v-if="user.token != null" class="personal-info">
-          <img
-            :src="user.headImage || '../assets/image/default_avatar.png'"
-            class="avatar"
-            width="24"
-            style="width: 40px; height: 40px"
-            alt="头像"
-            @mouseenter="showActions"
-            @mouseleave="scheduleHideMenu"
-          />
+          <img :src="user.headImage || '../assets/image/default_avatar.png'" class="avatar" width="24"
+            style="width: 40px; height: 40px" alt="头像" @mouseenter="showActions" @mouseleave="scheduleHideMenu" />
           <span class="username" @mouseenter="showActions" @mouseleave="scheduleHideMenu">{{
             user.accountName
           }}</span>
@@ -66,12 +50,7 @@
             <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
           </el-badge> -->
 
-          <ul
-            v-if="actionsVisible"
-            class="action-list"
-            @mouseenter="cancelHideMenu"
-            @mouseleave="scheduleHideMenu"
-          >
+          <ul v-if="actionsVisible" class="action-list" @mouseenter="cancelHideMenu" @mouseleave="scheduleHideMenu">
             <li @click="goto('/person')">个人主页</li>
             <li @click="goto('/editUserInfo')">修改信息</li>
             <li @click="logout">退出登录</li>
@@ -93,12 +72,18 @@ import { onMounted, ref } from 'vue'
 import { user } from '../stores/global'
 import { isLogin } from '../stores/global'
 import AuthDialog from '../components/AuthDialog.vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Footer from '../components/Footer.vue'
 import { useMessageStore } from '../stores/message'
 import ChatView from '../components/ChatView.vue'
 import axios from '@/axios'
-import { e } from 'unocss'
+import { inviteCode } from '../stores/global'
+
+
+//从路径获取邀请码
+const route = useRoute()
+inviteCode.value = String(route.query.inviteCode)
+
 
 var hideMenuTimeout: any
 const messageStore = useMessageStore()
@@ -177,12 +162,12 @@ const $router = useRouter()
 const handleSelect = (key: string, keyPath: string[]) => {
   if (key === '1') {
     $router.push({ path: '/' })
-  }else if (key === '2') {
+  } else if (key === '2') {
     $router.push({ path: '/task' })
   }
 }
 
-function getUser(){
+function getUser() {
   axios.get('/user/info').then((res) => {
     user.headImage = res.data.data.headImage
     user.accountName = res.data.data.accountName
@@ -443,7 +428,7 @@ form.example::content {
 }
 
 
-.coin_icon{
+.coin_icon {
   width: 40px;
   height: 40px;
   transform: scale(1);
@@ -479,7 +464,4 @@ form.example::content {
   font-weight: bold;
   background-color: white;
 }
-
-
-
 </style>

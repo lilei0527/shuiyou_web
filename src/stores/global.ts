@@ -1,3 +1,4 @@
+import exp from 'constants';
 import { reactive, ref } from 'vue'
 
 export const user = reactive({
@@ -9,3 +10,4 @@ export const user = reactive({
 })
 
 export const isLogin = ref(false);
+export const inviteCode = ref('');
