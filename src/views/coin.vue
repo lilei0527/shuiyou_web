@@ -6,7 +6,7 @@
         <img src="../assets/svg/coin.svg" style="width: 20px; height: 20px" alt="" />
       </div>
       <div class="operation">
-        <el-button type="primary">购买金币</el-button>
+        <el-button type="primary" @click="onBuy">购买金币</el-button>
         <el-button type="primary">做任务领金币</el-button>
       </div>
 
@@ -47,6 +47,7 @@ import { onMounted, ref } from 'vue'
 import { user } from '../stores/global'
 import type { ComponentSize } from 'element-plus'
 import axios from '@/axios'
+import { useRouter } from 'vue-router';
 const tableData = ref([])
 
 const currentPage = ref(1)
@@ -81,6 +82,11 @@ function fetchPointRecord(pageNum: number, pageSize: number) {
 const handleCurrentChange = (val: number) => {
   fetchPointRecord(val, 10)
   scrollToTop()
+}
+
+const $router = useRouter()
+function onBuy() {
+    $router.push({ path: '/alipay'})
 }
 
 onMounted(() => {

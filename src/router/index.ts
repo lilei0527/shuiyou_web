@@ -49,6 +49,11 @@ const router = createRouter({
         path: '/coin',
         name: 'coin',
         component: () => import('../views/coin.vue')
+      },
+      {
+        path: '/alipay',
+        name: 'alipay',
+        component: () => import('../views/alipay.vue')
       }
       
 
