@@ -31,21 +31,9 @@
       <el-card class="card">
         <div class="card-item">
           <div class="sign-in-head">
-            <img src="../assets/svg/share.svg" style="width: 20px; height: 20px ;margin-left: 2px;" alt="" />
-            <span class="task-name">分享</span>
-            <span class="task-reward">+20</span>
-            <span class="task-coin">金币</span>
-          </div>
-          <el-button type="success" size="mini" style="margin-left: 10px" class="sign-in-btn">已邀请3人</el-button>
-        </div>
-      </el-card>
-
-      <el-card class="card">
-        <div class="card-item">
-          <div class="sign-in-head">
             <img src="../assets/svg/invite.svg" style="width: 25px; height: 25px" alt="" />
             <span class="task-name">邀请</span>
-            <span class="task-reward">+30</span>
+            <span class="task-reward">+20</span>
             <span class="task-coin">金币</span>
           </div>
           <el-button type="success" size="mini" style="margin-left: 10px" class="sign-in-btn">剩余2次</el-button>

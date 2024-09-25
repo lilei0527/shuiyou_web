@@ -102,7 +102,7 @@ const registerForm = reactive({
   code: '',
   password: '',
   confirmPassword: '',
-  inviteCode: 
+  inviteCode: ''
 })
 
 const isRegisterFormValid = ref(false) // 表单是否验证通过
