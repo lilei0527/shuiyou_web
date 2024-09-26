@@ -31,7 +31,7 @@ export const useMessageStore = defineStore('message', {
     websocket: null as WebSocket | null,
     messages: [] as Message[], // 存储所有收到的消息
     unreadCount: 0, // 未读消息数
-    chatUserId: null as number | null, // 当前聊天用户 ID
+    chatUserId: ref(0), // 当前聊天用户 ID
     chatVisible: ref(false)
   }),
   actions: {

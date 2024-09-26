@@ -1,7 +1,14 @@
 <template>
   <div class="friends-list">
-    <el-dialog v-model="deleteDialogVishble" width="400" :before-close="handleClose" style="border-radius: 10px">
-      <span style="font-size: 16px; font-weight: bold">确定删除好友吗?删除后将无法收到对方发来的消息</span>
+    <el-dialog
+      v-model="deleteDialogVishble"
+      width="400"
+      :before-close="handleClose"
+      style="border-radius: 10px"
+    >
+      <span style="font-size: 16px; font-weight: bold"
+        >确定删除好友吗?删除后将无法收到对方发来的消息</span
+      >
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="deleteDialogVishble = false" type="primary">取消</el-button>
@@ -10,12 +17,21 @@
       </template>
     </el-dialog>
     <ul>
-      <li class="friend-item" v-for="(friend, index) in friends" :key="index"
-        @contextmenu="onContextMenu($event, friend.userId)" :class="{ friendChoose: selectedFriend === friend }"
-        @click="selectFriend(friend)">
+      <li
+        class="friend-item"
+        v-for="(friend, index) in friends"
+        :key="index"
+        @contextmenu="onContextMenu($event, friend.userId)"
+        :class="{ friendChoose: selectedFriend === friend }"
+        @click="selectFriend(friend)"
+      >
         <el-badge :value="friend.unRead" class="friend-image" :show-zero="false" :max="99">
-          <img :src="friend.avatar" alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd" class="friend-avatar" />
+          <img
+            :src="friend.avatar"
+            alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd"
+            class="friend-avatar"
+          />
         </el-badge>
 
         <div class="friend-info">
@@ -24,9 +40,26 @@
         </div>
 
         <div class="friend-tail">
-          <el-tag v-if="friend.isOnline" key="在线" type="success" effect="dark" round size="small"
-            style="width: 40px">在线</el-tag>
-          <el-tag v-else key="离线" type="danger" effect="dark" round size="small" style="width: 40px">离线</el-tag>
+          <el-tag
+            v-if="friend.isOnline"
+            key="在线"
+            type="success"
+            effect="dark"
+            round
+            size="small"
+            style="width: 40px"
+            >在线</el-tag
+          >
+          <el-tag
+            v-else
+            key="离线"
+            type="danger"
+            effect="dark"
+            round
+            size="small"
+            style="width: 40px"
+            >离线</el-tag
+          >
           <span class="friend-update-time"> {{ formatTime(friend.updateTime) }} </span>
         </div>
       </li>
@@ -89,8 +122,6 @@ interface Friend {
   updateTime: string
 }
 
-const userId = defineModel<Number | null>('userId')
-
 const friends = ref<Friend[]>()
 const selectedFriend = ref<Friend | null>(null)
 const emits = defineEmits(['select-friend'])
@@ -114,10 +145,9 @@ function deleteFriend(userId: number) {
     })
 }
 
-
 //监听userId
 watch(
-  () => userId.value,
+  () => messageStore.chatUserId,
   (newUserId) => {
     if (newUserId !== null) {
       loadFriends()
@@ -230,14 +260,21 @@ function loadFriends() {
       })
       messageStore.unreadCount = unreadCount
 
-      friends.value?.forEach((item) => {
-        if (item.userId === userId.value) {
-          selectFriend(item)
-          return
-        }
-      })
+      var friend = friends.value?.at(0);
+      if (messageStore.chatUserId !== 0) {
+        friends.value?.forEach((item) => {
+          if (item.userId === messageStore.chatUserId) {
+            friend = item;
+            selectFriend(item)
+            return
+          }
+        })
+      }
 
-      selectFriend(friends.value![0])
+      if(friend!=null){
+        selectFriend(friend)
+      }
+      
     } else {
       ElMessage.error(res.data.msg)
       return
@@ -254,7 +291,7 @@ onMounted(() => {
 
 <style scoped>
 .friends-list {
-  width: 320px;
+  width: 400px;
   height: 100%;
   border: 1px solid #ddd;
   border-radius: 10px;
@@ -308,7 +345,7 @@ li:hover {
 }
 
 .friend-info {
-  width: 110px;
+  width: 120px;
   display: flex;
   flex-direction: column;
   margin-left: 10px;
@@ -320,6 +357,7 @@ li:hover {
   flex-direction: column;
   justify-content: center;
   align-items: flex-end;
+  margin-left: auto;
 }
 
 .friend-update-time {

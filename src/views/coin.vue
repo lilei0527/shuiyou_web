@@ -45,9 +45,8 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { user } from '../stores/global'
-import type { ComponentSize } from 'element-plus'
+import { ElMessage, type ComponentSize } from 'element-plus'
 import axios from '@/axios'
-import { useRouter } from 'vue-router';
 const tableData = ref([])
 
 const currentPage = ref(1)
@@ -57,7 +56,7 @@ const size = ref<ComponentSize>('large')
 const background = ref(false)
 const disabled = ref(false)
 
-const handleSizeChange = (val: number) => {}
+const handleSizeChange = () => {}
 
 const scrollToTop = () => {
   //滚动到顶部
@@ -84,9 +83,9 @@ const handleCurrentChange = (val: number) => {
   scrollToTop()
 }
 
-const $router = useRouter()
 function onBuy() {
-    $router.push({ path: '/alipay'})
+    // $router.push({ path: '/alipay'})
+    window.open('/alipay')
 }
 
 onMounted(() => {

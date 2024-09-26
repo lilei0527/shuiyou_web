@@ -1,7 +1,7 @@
 <template>
   <!-- <img src="./assets/logo.png">
       <router-view/> -->
-  <ChatView v-if="user.token != null" v-show="messageStore.chatVisible" v-model:userId="messageStore.chatUserId">
+  <ChatView v-if="user.token != null" v-show="messageStore.chatVisible">
   </ChatView>
   <AuthDialog v-model:isLoginDialogVisible="isLogin" />
 
@@ -127,7 +127,6 @@ function logout() {
   user.point = 0
 
   messageStore.chatVisible = false
-  messageStore.chatUserId = null
   messageStore.websocket?.close()
   messageStore.unreadCount = 0
   messageStore.messages = []

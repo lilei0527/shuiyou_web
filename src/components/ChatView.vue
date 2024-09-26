@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div class="container">
-      <FriendsList @select-friend="handleSelectFriend" v-model:userId="userId" />
+      <FriendsList @select-friend="handleSelectFriend"/>
       <Chat :friend="selectedFriend" />
       <img src="../assets/svg/x.svg" alt="关闭"
         style="width: 40px; height: 40px; right: 0px;  position: relative; cursor: pointer; " @click="handleClose">
@@ -23,9 +23,6 @@ interface Friend {
   unRead: number
 }
 
-// const route = useRoute()
-// var userId = Number(route.query.userId)
-const userId = defineModel<Number | null>('userId')
 
 const selectedFriend = ref<Friend | null>(null)
 function handleSelectFriend(friend: Friend) {

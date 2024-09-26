@@ -58,7 +58,7 @@ import { onMounted, ref } from 'vue';
 import { user } from '../stores/global'
 
 function copyLink() {
-  const textToCopy = '我发现一个靠谱又有趣的个人求购平台，快来玩玩吧!  https://www.meiqiu.top/minds?inviteCode=' + user.inviteCode
+  const textToCopy = '我发现一个靠谱又有趣的个人求购平台，快来玩玩吧!  http://localhost:5173/minds?inviteCode=' + user.inviteCode
   navigator.clipboard.writeText(textToCopy).then(() => {
     ElMessage.success('邀请链接已成功复制到剪贴板！')
   }).catch((error) => {
