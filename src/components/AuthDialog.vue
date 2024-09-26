@@ -4,6 +4,7 @@ import { ElMessage, type FormInstance } from 'element-plus'
 import { reactive, ref } from 'vue'
 import { user } from '../stores/global'
 import { useMessageStore } from '../stores/message'
+import { inviteCode } from '../stores/global'
 
 const messageStore = useMessageStore()
 const isLoginDialogVisible = defineModel<boolean>('isLoginDialogVisible')
@@ -20,10 +21,13 @@ function login() {
       localStorage.setItem('accountName', userData.accountName)
       localStorage.setItem('headImage', userData.headImage)
       localStorage.setItem('userId', userData.userId)
+      localStorage.setItem('inviteCode', userData.inviteCode)
+
       user.accountName = userData.accountName
       user.headImage = userData.headImage
       user.token = userData.token
       user.userId = userData.userId
+      user.inviteCode = userData.inviteCode
       user.point = userData.point
       isLoginDialogVisible.value = false
 
@@ -49,6 +53,7 @@ function register() {
     return
   }
 
+  registerForm.inviteCode = inviteCode.value
   axios.post('/user/register', registerForm).then((response) => {
     if (response.data.code != 200) {
       ElMessage.error(response.data.message)

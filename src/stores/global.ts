@@ -1,4 +1,3 @@
-import exp from 'constants';
 import { reactive, ref } from 'vue'
 
 export const user = reactive({
@@ -6,6 +5,7 @@ export const user = reactive({
     accountName: localStorage.getItem('accountName'),
     headImage: localStorage.getItem('headImage'),
     token: localStorage.getItem('token'),
+    inviteCode: localStorage.getItem('inviteCode'),
     point: 0
 })
 

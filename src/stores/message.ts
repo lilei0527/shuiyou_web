@@ -38,7 +38,7 @@ export const useMessageStore = defineStore('message', {
     // 初始化 WebSocket 连接
     initWebSocket() {
       //ws://localhost:8080/api
-      
+
       // const wsUrl = 'ws://' + 'localhost:8080/api/channel/echo';
       this.websocket = new WebSocket(wsUrl);
 
@@ -71,8 +71,8 @@ export const useMessageStore = defineStore('message', {
       // WebSocket 连接关闭时
       this.websocket.onclose = () => {
         console.log('WebSocket connection closed. Reconnecting...');
-        if(localStorage.getItem('token')!== null){
-            setTimeout(() => this.initWebSocket(), 1000); // 自动重连
+        if (localStorage.getItem('token') !== null) {
+          setTimeout(() => this.initWebSocket(), 1000); // 自动重连
         }
       };
 

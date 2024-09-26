@@ -9,6 +9,10 @@ import CommentDialog from '../components/CommentDialog.vue'
 import AuthDialog from '../components/AuthDialog.vue'
 import 'viewerjs/dist/viewer.css'
 import Viewer from 'viewerjs'
+import { user } from '@/stores/global'
+import { useMessageStore } from '../stores/message'
+import { i } from 'node_modules/vite/dist/node/types.d-aGj9QkWt'
+const messageStore = useMessageStore()
 
 const route = useRoute()
 var mindId = Number(route.query.id)
@@ -241,12 +245,81 @@ const addMaxWidth = () => {
     }
   })
 }
+
+const centerDialogVisible = ref(false)
+const chatUserId = ref(0)
+
+//点击私聊
+function onChat(userId: number) {
+  //判断是否已登录
+  const token = localStorage.getItem('token')
+  if (token == null) {
+    showLoginDialog.value = true
+    return
+  }
+
+  chatUserId.value = userId
+
+  //是否已经是好友
+  axios
+    .get('/friend/isAdded', {
+      params: {
+        userId: userId
+      }
+    })
+    .then((res) => {
+      if (res.data.code === 200) {
+        if (res.data.data) {
+          //打开聊天窗口
+          messageStore.chatUserId = userId
+          messageStore.chatVisible = true
+        } else {
+          centerDialogVisible.value = true
+        }
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    })
+}
+
+
+function openChat() {
+  centerDialogVisible.value = false
+
+  //是否已经是好友
+
+  //扣除对应金币,添加好友关系
+  axios
+    .post('/user/chat', {
+      toUserId: chatUserId.value
+    })
+    .then((res) => {
+      if (res.data.code === 200) {
+        user.point -= 10
+        //打开聊天窗口
+        messageStore.chatUserId = chatUserId.value
+        messageStore.chatVisible = true
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    })
+}
 </script>
 
 <template>
   <AuthDialog v-model:isLoginDialogVisible="showLoginDialog" />
   <CommentDialog v-model:commentDialogVisible="commentDialogVisible" v-if="comment" :comment="comment"
     @afterSaveComment="afterSaveComment" />
+
+  <el-dialog v-model="centerDialogVisible" title="" width="500" center class="spend-points-dialog">
+    <span class="spend-points-dialog-content"> 将花费10金币，是否确定私聊？ </span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button type="primary" @click="centerDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="openChat"> 确定 </el-button>
+      </div>
+    </template>
+  </el-dialog>
 
   <el-dialog v-model="reportDialogVisible" title="举报" width="500px" center class="report-dialog">
     <el-radio-group v-model="reportRadio" size="large">
@@ -303,9 +376,14 @@ const addMaxWidth = () => {
             <div v-for="(item, index) in commentList" :key="index">
               <el-card>
                 <div class="user-header">
-                  <img :src="item.fromUserHeadImage" alt="" style="width: 40px; height: 40px"/>
+                  <img :src="item.fromUserHeadImage" alt="" style="width: 40px; height: 40px" />
                   <span class="user-name">{{ item.fromUserName }}</span>
-                  <span class="time">{{ item.createTime }}</span>
+                  <div class="user-tail">
+                    <span class="time">{{ item.createTime }}</span>
+                    <el-button v-if="user.userId != null && item.fromUserId!.toString() != user.userId" type="success"
+                      plain @click="onChat(item.fromUserId!)">私聊</el-button>
+                  </div>
+
                 </div>
                 <div v-html="item.content" class="user-content"></div>
                 <span class="report-operate" @click="onReportClick(item.id!, item.fromUserId!)">举报</span><span
@@ -319,7 +397,11 @@ const addMaxWidth = () => {
                     <span class="user-name">{{ childItem.fromUserName }}</span>
                     <span class="reply-text" @click="onCommentClick(childItem.fromUserId!, childItem.id!)">回复</span>
                     <span class="user-name-child">{{ childItem.toUserName }}</span>
-                    <span class="time">{{ childItem.createTime }}</span>
+                    <div class="user-tail">
+                      <span class="time">{{ item.createTime }}</span>
+                      <el-button v-if="user.userId != null && childItem.fromUserId!.toString() != user.userId"
+                        type="success" plain @click="onChat(childItem.fromUserId!)">私聊</el-button>
+                    </div>
                   </div>
                   <div v-html="childItem.content" class="user-content_child"></div>
                   <span class="report-operate"
@@ -410,9 +492,10 @@ el-button {
 }
 
 .time {
-  margin-left: auto;
+  // margin-left: auto;
   color: #999;
   font-size: 12px;
+  margin-right: 10px;
 }
 
 .plan-name {
@@ -479,5 +562,20 @@ el-button {
 
 .comment-list img {
   cursor: pointer;
+}
+
+.user-tail {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.spend-points-dialog-content {
+  font-size: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 20px;
 }
 </style>

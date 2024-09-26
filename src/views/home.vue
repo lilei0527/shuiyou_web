@@ -7,18 +7,13 @@
 
 
   <div v-if="user.token != null" class="sidebar">
-    <el-badge
-    :value="messageStore.unreadCount"
-    :show-zero="false"
-    :max="99"
-    :size="size"
-    >
-    <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
-  </el-badge>
-  <span class="sidebar-message">消息</span>
-  <hr/>
-  <img @click="gotoCoin"   src="../assets/svg/coin.svg" alt="" class="coin_icon">
-  <span class="sidebar-message">金币 {{user.point}}</span>
+    <el-badge :value="messageStore.unreadCount" :show-zero="false" :max="99" :size="size">
+      <img @click="openChat" class="message_icon" src="../assets/svg/message.svg" alt="" />
+    </el-badge>
+    <span class="sidebar-message">消息</span>
+    <hr />
+    <img @click="gotoCoin" src="../assets/svg/coin.svg" alt="" class="coin_icon">
+    <span class="sidebar-message">金币 {{ user.point }}</span>
   </div>
 
 
@@ -29,7 +24,7 @@
       <el-menu style="width: 100%" :default-active="activeIndex2" class="el-menu-demo" mode="horizontal"
         @select="handleSelect">
         <el-menu-item index="1">广场</el-menu-item>
-        <el-menu-item index="2">金币任务</el-menu-item>
+        <el-menu-item v-if="user.token != null" index="2">金币任务</el-menu-item>
       </el-menu>
       <div class="info-content">
         <!-- <div class="search bar7">
@@ -63,7 +58,7 @@
         </div>
 
         <div v-else class="login-click">
-          <span @click="onLoginClick">登录</span>
+          <span @click="onLoginClick">登录/注册</span>
         </div>
       </div>
     </div>
@@ -77,17 +72,11 @@ import { onMounted, ref } from 'vue'
 import { user } from '../stores/global'
 import { isLogin } from '../stores/global'
 import AuthDialog from '../components/AuthDialog.vue'
-import { useRoute, useRouter } from 'vue-router'
 import Footer from '../components/Footer.vue'
 import { useMessageStore } from '../stores/message'
 import ChatView from '../components/ChatView.vue'
 import axios from '@/axios'
-import { inviteCode } from '../stores/global'
-
-
-//从路径获取邀请码
-const route = useRoute()
-inviteCode.value = String(route.query.inviteCode)
+import { useRouter } from 'vue-router'
 
 
 var hideMenuTimeout: any
@@ -128,11 +117,13 @@ function logout() {
   localStorage.removeItem('accountName')
   localStorage.removeItem('headImage')
   localStorage.removeItem('userId')
+  localStorage.removeItem('inviteCode')
 
   user.headImage = null
   user.accountName = null
   user.token = null
   user.userId = null
+  user.inviteCode = null
   user.point = 0
 
   messageStore.chatVisible = false
@@ -150,7 +141,7 @@ function openChat() {
   messageStore.chatVisible = true
 }
 
-function gotoCoin(){
+function gotoCoin() {
   $router.push({ path: '/coin' })
 }
 
@@ -185,7 +176,9 @@ function getUser() {
 }
 
 onMounted(() => {
-  getUser()
+  if (user.token != null) {
+    getUser()
+  }
 })
 </script>
 

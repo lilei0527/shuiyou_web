@@ -1,14 +1,7 @@
 <template>
   <div class="friends-list">
-    <el-dialog
-      v-model="deleteDialogVishble"
-      width="400"
-      :before-close="handleClose"
-      style="border-radius: 10px"
-    >
-      <span style="font-size: 16px; font-weight: bold"
-        >确定删除好友吗?删除后将无法收到对方发来的消息</span
-      >
+    <el-dialog v-model="deleteDialogVishble" width="400" :before-close="handleClose" style="border-radius: 10px">
+      <span style="font-size: 16px; font-weight: bold">确定删除好友吗?删除后将无法收到对方发来的消息</span>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="deleteDialogVishble = false" type="primary">取消</el-button>
@@ -17,21 +10,12 @@
       </template>
     </el-dialog>
     <ul>
-      <li
-        class="friend-item"
-        v-for="(friend, index) in friends"
-        :key="index"
-        @contextmenu="onContextMenu($event, friend.userId)"
-        :class="{ friendChoose: selectedFriend === friend }"
-        @click="selectFriend(friend)"
-      >
+      <li class="friend-item" v-for="(friend, index) in friends" :key="index"
+        @contextmenu="onContextMenu($event, friend.userId)" :class="{ friendChoose: selectedFriend === friend }"
+        @click="selectFriend(friend)">
         <el-badge :value="friend.unRead" class="friend-image" :show-zero="false" :max="99">
-          <img
-            :src="friend.avatar"
-            alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd"
-            class="friend-avatar"
-          />
+          <img :src="friend.avatar" alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; border: 0.1px solid #ddd" class="friend-avatar" />
         </el-badge>
 
         <div class="friend-info">
@@ -40,26 +24,9 @@
         </div>
 
         <div class="friend-tail">
-          <el-tag
-            v-if="friend.isOnline"
-            key="在线"
-            type="success"
-            effect="dark"
-            round
-            size="small"
-            style="width: 40px"
-            >在线</el-tag
-          >
-          <el-tag
-            v-else
-            key="离线"
-            type="danger"
-            effect="dark"
-            round
-            size="small"
-            style="width: 40px"
-            >离线</el-tag
-          >
+          <el-tag v-if="friend.isOnline" key="在线" type="success" effect="dark" round size="small"
+            style="width: 40px">在线</el-tag>
+          <el-tag v-else key="离线" type="danger" effect="dark" round size="small" style="width: 40px">离线</el-tag>
           <span class="friend-update-time"> {{ formatTime(friend.updateTime) }} </span>
         </div>
       </li>
@@ -253,7 +220,7 @@ function loadFriends() {
   axios.get('/friend/getAll').then((res) => {
     if (res.data.code === 200) {
       friends.value = res.data.data
-      
+
       var unreadCount = 0
       friends.value?.forEach((item) => {
         if (item.lastContent.startsWith('http')) {
@@ -279,7 +246,7 @@ function loadFriends() {
 }
 
 onMounted(() => {
-  if (user.token!== null) {
+  if (user.token !== null) {
     loadFriends()
   }
 })

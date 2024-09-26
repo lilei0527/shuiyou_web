@@ -10,7 +10,6 @@ import Viewer from 'viewerjs'
 import { useMessageStore } from '../stores/message'
 import AuthDialog from '../components/AuthDialog.vue'
 import { user } from '@/stores/global'
-import { e } from 'unocss'
 const messageStore = useMessageStore()
 
 interface Mind {
@@ -197,13 +196,7 @@ function onChat() {
     <tr class="mind_row">
       <!-- 头像 -->
       <td width="24" valign="top">
-        <img
-          :src="mind.userHeadImage"
-          class="avatar"
-          width="24"
-          style="width: 40px; height: 40px"
-          alt="zj9495"
-        />
+        <img :src="mind.userHeadImage" class="avatar" width="24" style="width: 40px; height: 40px" alt="zj9495" />
       </td>
       <td width="100%" valign="top" class="mind_content_col">
         <div class="fr">
@@ -211,30 +204,18 @@ function onChat() {
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
             <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
-            <el-button type="success" plain @click="onChat">私聊</el-button>
-            <el-popconfirm
-              v-if="props.canEdit"
-              title="确定要删除该项吗？"
-              confirmButtonText="确定"
-              cancelButtonText="取消"
-              icon="el-icon-warning"
-              iconColor="red"
-              @confirm="deleteMind"
-            >
+            <el-button v-if="user.userId != null && mind.userId.toString() != user.userId" type="success" plain
+              @click="onChat">私聊</el-button>
+            <el-popconfirm v-if="props.canEdit" title="确定要删除该项吗？" confirmButtonText="确定" cancelButtonText="取消"
+              icon="el-icon-warning" iconColor="red" @confirm="deleteMind">
               <!-- 删除按钮，点击触发弹窗 -->
               <template v-slot:reference>
                 <el-button class="delete-btn" type="danger" :icon="Delete" circle size="small" />
               </template>
             </el-popconfirm>
 
-            <el-button
-              v-if="props.canEdit"
-              type="info"
-              :icon="Edit"
-              circle
-              size="small"
-              @click="$router.push({ name: 'create_mind', query: { mindId: mind.id } })"
-            />
+            <el-button v-if="props.canEdit" type="info" :icon="Edit" circle size="small"
+              @click="$router.push({ name: 'create_mind', query: { mindId: mind.id } })" />
           </span>
         </div>
         <div v-html="mind.content" class="mind_content" @click="jumpToComment"></div>
@@ -307,8 +288,10 @@ table {
 }
 
 .mind_content_col img {
-  max-width: 250px !important; /* 限制图片的最大宽度为容器的宽度 */
-  height: auto !important; /* 自动调整高度以保持宽高比 */
+  max-width: 250px !important;
+  /* 限制图片的最大宽度为容器的宽度 */
+  height: auto !important;
+  /* 自动调整高度以保持宽高比 */
 }
 
 .mind_content :hover {
@@ -332,8 +315,10 @@ table {
 }
 
 .mind_content_col img {
-  max-width: 250px !important; /* 限制图片的最大宽度为容器的宽度 */
-  height: auto !important; /* 自动调整高度以保持宽高比 */
+  max-width: 250px !important;
+  /* 限制图片的最大宽度为容器的宽度 */
+  height: auto !important;
+  /* 自动调整高度以保持宽高比 */
 }
 
 .comment-num {

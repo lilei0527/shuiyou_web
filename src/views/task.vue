@@ -36,7 +36,8 @@
             <span class="task-reward">+20</span>
             <span class="task-coin">金币</span>
           </div>
-          <el-button type="success" size="mini" style="margin-left: 10px" class="sign-in-btn">剩余2次</el-button>
+          <el-button type="success" size="mini" style="margin-left: 10px" class="sign-in-btn"
+            @click="copyLink">复制专属邀请链接</el-button>
         </div>
       </el-card>
 
@@ -55,6 +56,15 @@ import axios from '@/axios';
 import { ElMessage } from 'element-plus';
 import { onMounted, ref } from 'vue';
 import { user } from '../stores/global'
+
+function copyLink() {
+  const textToCopy = '我发现一个靠谱又有趣的个人求购平台，快来玩玩吧!  https://www.meiqiu.top/minds?inviteCode=' + user.inviteCode
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    ElMessage.success('邀请链接已成功复制到剪贴板！')
+  }).catch((error) => {
+    ElMessage.error('无法复制邀请链接：', error);
+  });
+}
 
 const isSignIn = ref(false)
 function isSign() {

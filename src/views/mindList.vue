@@ -2,6 +2,14 @@
 import Mind from './mind.vue'
 import { ref } from 'vue'
 import axios from '@/axios'
+import { useRoute } from 'vue-router'
+import { inviteCode } from '../stores/global'
+
+
+//从路径获取邀请码
+const route = useRoute()
+inviteCode.value = String(route.query.inviteCode)
+
 
 const centerDialogVisible = ref(false)
 const radio = ref(3)
