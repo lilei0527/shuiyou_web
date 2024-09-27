@@ -204,8 +204,7 @@ function onChat() {
           <span class="mind_content_tail">
             <span class="fade small time">{{ mind.createTime }}</span>
             <el-tag type="warning" class="comment-num">{{ mind.commentNum }}</el-tag>
-            <el-button v-if="user.userId != null && mind.userId.toString() != user.userId" type="success" plain
-              @click="onChat">私聊</el-button>
+            <el-button v-if="mind.userId.toString() != user.userId" type="success" plain @click="onChat">私聊</el-button>
             <el-popconfirm v-if="props.canEdit" title="确定要删除该项吗？" confirmButtonText="确定" cancelButtonText="取消"
               icon="el-icon-warning" iconColor="red" @confirm="deleteMind">
               <!-- 删除按钮，点击触发弹窗 -->

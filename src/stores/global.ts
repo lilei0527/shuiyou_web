@@ -11,3 +11,4 @@ export const user = reactive({
 
 export const isLogin = ref(false);
 export const inviteCode = ref('');
+export const activeIndex = ref('1')

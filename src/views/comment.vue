@@ -11,7 +11,6 @@ import 'viewerjs/dist/viewer.css'
 import Viewer from 'viewerjs'
 import { user } from '@/stores/global'
 import { useMessageStore } from '../stores/message'
-import { i } from 'node_modules/vite/dist/node/types.d-aGj9QkWt'
 const messageStore = useMessageStore()
 
 const route = useRoute()
@@ -420,7 +419,11 @@ function openChat() {
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-        <span>对于买家的需求，卖家可以提供自己的方案。方案描述应该尽量具体，可以提供自己的联系方式，以便买家与您取得联系。</span>
+        <span>对于发布方的需求，说说自己的解决方案吧！</span>
+      </el-card>
+
+      <el-card style="max-width: 100%; margin-top: 10px">
+        <span>建议先提供方案，如果发布方感兴趣，再私聊发布方商量具体方案</span>
       </el-card>
     </div>
   </div>

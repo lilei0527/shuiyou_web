@@ -16,7 +16,7 @@
         </div>
       </el-card>
 
-      <el-card class="card">
+      <!-- <el-card class="card">
         <div class="card-item">
           <div class="sign-in-head">
             <img src="../assets/svg/ad.svg" style="width: 25px; height: 25px" alt="" />
@@ -24,9 +24,9 @@
             <span class="task-reward">+10</span>
             <span class="task-coin">金币</span>
           </div>
-          <el-button type="success" size="mini" style="margin-left: 10px" class="sign-in-btn">剩余2次</el-button>
+          <el-button type="disabled" size="mini" style="margin-left: 10px" class="sign-in-btn">待接入广告</el-button>
         </div>
-      </el-card>
+      </el-card> -->
 
       <el-card class="card">
         <div class="card-item">
@@ -45,7 +45,11 @@
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-        <span>请上传头像，大小不超过2MB<br />请填写用户名，长度在2到8个字符<br />请填写密码，长度在6到16个字符(不修改密码请留空)</span>
+        <span>签到任务，一天只能签到一次，每天零点重置</span>
+      </el-card>
+
+      <el-card style="max-width: 100%; margin-top: 10px">
+        <span>邀请任务，复制专属链接给好友或者各大社交平台，通过你的邀请链接进入并注册即可获得奖励</span>
       </el-card>
     </div>
   </div>
@@ -58,7 +62,7 @@ import { onMounted, ref } from 'vue';
 import { user } from '../stores/global'
 
 function copyLink() {
-  const textToCopy = '我发现一个靠谱又有趣的个人求购平台，快来玩玩吧!  http://localhost:5173/minds?inviteCode=' + user.inviteCode
+  const textToCopy = '来《谁有求购》领取你的专属优惠!  ' + import.meta.env.VITE_BASE_URL + '/minds?inviteCode=' + user.inviteCode
   navigator.clipboard.writeText(textToCopy).then(() => {
     ElMessage.success('邀请链接已成功复制到剪贴板！')
   }).catch((error) => {
@@ -81,7 +85,7 @@ function sign() {
   axios.post('/user/signIn').then(res => {
     if (res.data.code === 200) {
       ElMessage.success('签到成功')
-      user.point += 10
+      user.point += 5
       isSignIn.value = true
     } else {
       ElMessage.error(res.data.msg)
@@ -130,5 +134,6 @@ onMounted(() => {
 
 .card {
   margin-top: 1px;
+ 
 }
 </style>

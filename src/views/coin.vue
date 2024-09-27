@@ -7,36 +7,25 @@
       </div>
       <div class="operation">
         <el-button type="primary" @click="onBuy">购买金币</el-button>
-        <el-button type="primary">做任务领金币</el-button>
+        <el-button type="primary" @click="onTask">做任务领金币</el-button>
       </div>
 
       <!-- 金币记录 -->
       <div class="record">
-        <el-table :data="tableData" border  style="width: 100%" class="point-table">
+        <el-table :data="tableData" border style="width: 100%" class="point-table">
           <el-table-column prop="pointType" label="类型" />
           <el-table-column prop="point" label="金币变动" />
           <el-table-column prop="createTime" label="日期" />
         </el-table>
       </div>
       <!-- 分页 -->
-      <el-pagination
-        class="pager"
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :size="size"
-        :disabled="disabled"
-        :background="background"
-        layout="prev, pager, next, jumper"
-        :total="total"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
+      <el-pagination class="pager" v-model:current-page="currentPage" v-model:page-size="pageSize" :size="size"
+        :disabled="disabled" :background="background" layout="prev, pager, next, jumper" :total="total"
+        @size-change="handleSizeChange" @current-change="handleCurrentChange" />
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-        <span
-          >请上传头像，大小不超过2MB<br />请填写用户名，长度在2到8个字符<br />请填写密码，长度在6到16个字符(不修改密码请留空)</span
-        >
+        <span>购买金币后，刷新此页面才可以看到金币到账哦！<br /></span>
       </el-card>
     </div>
   </div>
@@ -47,6 +36,7 @@ import { onMounted, ref } from 'vue'
 import { user } from '../stores/global'
 import { ElMessage, type ComponentSize } from 'element-plus'
 import axios from '@/axios'
+import { useRouter } from 'vue-router';
 const tableData = ref([])
 
 const currentPage = ref(1)
@@ -56,7 +46,7 @@ const size = ref<ComponentSize>('large')
 const background = ref(false)
 const disabled = ref(false)
 
-const handleSizeChange = () => {}
+const handleSizeChange = () => { }
 
 const scrollToTop = () => {
   //滚动到顶部
@@ -84,8 +74,13 @@ const handleCurrentChange = (val: number) => {
 }
 
 function onBuy() {
-    // $router.push({ path: '/alipay'})
-    window.open('/alipay')
+  // $router.push({ path: '/alipay'})
+  window.open('/alipay')
+}
+
+const $router = useRouter()
+function onTask() {
+  $router.push({ path: '/task' })
 }
 
 onMounted(() => {
@@ -111,5 +106,4 @@ onMounted(() => {
 .point-table {
   margin-top: 50px;
 }
-
 </style>

@@ -116,25 +116,28 @@ const redisterRuleFormRef = ref<FormInstance>()
 const rules = {
   account: [
     { required: true, message: '请输入账号', trigger: 'blur' },
-    { min: 5, max: 20, message: '账号长度在 6 到 16 个字符', trigger: 'blur' }
+    { min: 5, max: 20, message: '账号长度在 6 到 16 个字符', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9]*$/, message: '账号只能包含字母和数字', trigger: 'blur' }
   ],
 
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度在 6 到 16 个字符', trigger: 'blur' }
+    { min: 6, max: 20, message: '密码长度在 6 到 16 个字符', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9]*$/, message: '密码只能包含字母和数字', trigger: 'blur' }
   ],
 
   confirmPassword: [
     { required: true, message: '请输入确认密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度在 6 到 16 个字符', trigger: 'blur' }
+    { min: 6, max: 20, message: '密码长度在 6 到 16 个字符', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9]*$/, message: '密码只能包含字母和数字', trigger: 'blur' }
   ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' },
   ],
   code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
-    { min: 4, max: 4, message: '验证码长度为 4', trigger: 'blur' }
+    { min: 4, max: 4, message: '验证码长度为 4', trigger: 'blur' },
   ]
 }
 
@@ -148,7 +151,7 @@ function handleInput() {
 }
 
 const isCodeSend = ref(false)
-const expireTime = ref(120)
+const expireTime = ref(60)
 
 function sendCode() {
   axios.post('/user/sendPhoneCode', { phone: registerForm.phone }).then((response) => {
@@ -171,7 +174,7 @@ function countDown() {
     }, 1000)
   } else {
     isCodeSend.value = false
-    expireTime.value = 120
+    expireTime.value = 60
   }
 }
 </script>

@@ -52,13 +52,19 @@ if (mindId && mindId != null) {
 const isDisabled = mindId != null
 
 const onSubmit = async () => {
+  var str = valueHtml.value;
+  const strCovert = str.replace(/<[^<p>]+>/g, '')  // 将所有<p>标签 replace ''
+    .replace(/<[</p>$]+>/g, '')  // 将所有</p>标签 replace ''
+    .replace(/&nbsp;/gi, '')  // 将所有 空格 replace ''
+    .replace(/<[^<br/>]+>/g, '') // 将所有 换行符 replace ''
+
   //是否输入内容
-  if (valueHtml.value!.trim() == '<p><br></p>') {
+  if (strCovert.trim() == '') {
     ElMessage.error('请输入内容')
     return
   }
 
-   await axios.post('/mind', {
+  await axios.post('/mind', {
     id: mindId,
     typeId: form.type,
     content: valueHtml.value
@@ -216,14 +222,8 @@ const editorConfig = {
 <template>
   <div class="my-content">
     <div class="main-content">
-      <el-form
-        :model="form"
-        label-width="auto"
-        style="max-width: 100%"
-        :rules="rules"
-        ref="ruleFormRef"
-        @input="handleInput"
-      >
+      <el-form :model="form" label-width="auto" style="max-width: 100%" :rules="rules" ref="ruleFormRef"
+        @input="handleInput">
         <el-form-item label="分类" prop="type">
           <el-radio-group v-model="form.type" :disabled="isDisabled">
             <el-radio v-for="(item, index) in typeList" :key="index" :value="item.id">{{
@@ -232,31 +232,24 @@ const editorConfig = {
           </el-radio-group>
         </el-form-item>
 
-        <Toolbar
-            :editor="editorRef"
-            :defaultConfig="toolbarConfig"
-            :mode="mode"
-            style="border-bottom: 1px solid #ccc"
-          />
-          <Editor
-            :defaultConfig="editorConfig"
-            :mode="mode"
-            v-model="valueHtml"
-            style="height: 500px;"
-            @onCreated="handleCreated"
-          />
+        <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" :mode="mode"
+          style="border-bottom: 1px solid #ccc" />
+        <Editor :defaultConfig="editorConfig" :mode="mode" v-model="valueHtml" style="height: 500px;"
+          @onCreated="handleCreated" />
 
-          <div class="dialog-footer">
-              <el-button @click="onCancel" type="primary">取消</el-button>
-              <el-button @click="onSubmit" type="primary">提交</el-button>
-          </div>
+        <div class="dialog-footer">
+          <el-button @click="onCancel" type="primary">取消</el-button>
+          <el-button @click="onSubmit" type="primary">提交</el-button>
+        </div>
       </el-form>
     </div>
     <div class="right-content">
       <el-card style="max-width: 100%; margin-top: 10px">
-        <span
-          >发布求购信息时，建议提供详细的物品名称、数量、单价、联系方式等信息，以便卖家更快的与您联系。</span
-        >
+        <span>发布求购信息时，建议提供详细的物品名称、数量、单价等信息，以便卖家更快的与您联系。</span>
+      </el-card>
+
+      <el-card style="max-width: 100%; margin-top: 10px">
+        <span style="color: #ca5b48;">为了避免骚扰，联系方式尽量不要透露！用私聊联系更加安全！</span>
       </el-card>
     </div>
   </div>
@@ -275,7 +268,8 @@ button {
   float: right;
   margin: auto;
 }
-.dialog-footer{
+
+.dialog-footer {
   display: flex;
   justify-content: space-between;
 }

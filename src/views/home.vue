@@ -21,8 +21,8 @@
   <div class="my-header">
     <div class="header-content">
       <img src="../assets/image/sy_logo.png" style="width: 80px; height: 80px" alt="logo" />
-      <el-menu style="width: 100%" :default-active="activeIndex2" class="el-menu-demo" mode="horizontal"
-        @select="handleSelect">
+      <el-menu style="width: 100%" :default-active="activeIndex" class="el-menu-demo" mode="horizontal"
+        @select="handleSelect" router="true">
         <el-menu-item index="1">广场</el-menu-item>
         <el-menu-item v-if="user.token != null" index="2">金币任务</el-menu-item>
       </el-menu>
@@ -77,6 +77,7 @@ import { useMessageStore } from '../stores/message'
 import ChatView from '../components/ChatView.vue'
 import axios from '@/axios'
 import { useRouter } from 'vue-router'
+import { activeIndex } from '../stores/global'
 
 
 var hideMenuTimeout: any
@@ -134,6 +135,7 @@ function logout() {
 
 function goto(path: string) {
   $router.push({ path: path })
+  activeIndex.value = '0'
 }
 
 function openChat() {
@@ -142,6 +144,7 @@ function openChat() {
 
 function gotoCoin() {
   $router.push({ path: '/coin' })
+  activeIndex.value = '0'
 }
 
 // function getUnreadCount() {
@@ -156,7 +159,6 @@ function gotoCoin() {
 //   }
 // })
 
-const activeIndex2 = ref('1')
 const $router = useRouter()
 const handleSelect = (key: string, keyPath: string[]) => {
   if (key === '1') {
