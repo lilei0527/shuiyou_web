@@ -39,7 +39,7 @@ function alipay() {
           window.document.forms[0].submit()
         })
       } else {
-        ElMessage.error(res.data.msg)
+        ElMessage.error(res.data.message)
       }
     })
 }

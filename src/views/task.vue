@@ -33,7 +33,7 @@
           <div class="sign-in-head">
             <img src="../assets/svg/invite.svg" style="width: 25px; height: 25px" alt="" />
             <span class="task-name">邀请</span>
-            <span class="task-reward">+20</span>
+            <span class="task-reward">+30</span>
             <span class="task-coin">金币</span>
           </div>
           <el-button type="success" size="mini" style="margin-left: 10px" class="sign-in-btn"
@@ -62,7 +62,7 @@ import { onMounted, ref } from 'vue';
 import { user } from '../stores/global'
 
 function copyLink() {
-  const textToCopy = '来《谁有求购》领取你的专属优惠!  ' + import.meta.env.VITE_BASE_URL + '/minds?inviteCode=' + user.inviteCode
+  const textToCopy = '来《谁有求购》领取你的专属优惠!  ' + import.meta.env.VITE_BASE_URL + '/?inviteCode=' + user.inviteCode
   navigator.clipboard.writeText(textToCopy).then(() => {
     ElMessage.success('邀请链接已成功复制到剪贴板！')
   }).catch((error) => {
@@ -76,7 +76,7 @@ function isSign() {
     if (res.data.code === 200) {
       isSignIn.value = res.data.data
     } else {
-      ElMessage.error(res.data.msg)
+      ElMessage.error(res.data.message)
     }
   })
 }
@@ -88,7 +88,7 @@ function sign() {
       user.point += 5
       isSignIn.value = true
     } else {
-      ElMessage.error(res.data.msg)
+      ElMessage.error(res.data.msmessageg)
     }
   })
 }

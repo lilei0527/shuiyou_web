@@ -99,7 +99,7 @@ function submitForm() {
       //   user.headImage = res.data.data
       ElMessage.success('修改成功')
     } else {
-      ElMessage.error(res.data.msg)
+      ElMessage.error(res.data.message)
     }
   })
 }

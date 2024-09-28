@@ -276,7 +276,7 @@ function onChat(userId: number) {
           centerDialogVisible.value = true
         }
       } else {
-        ElMessage.error(res.data.msg)
+        ElMessage.error(res.data.message)
       }
     })
 }
@@ -299,7 +299,7 @@ function openChat() {
         messageStore.chatUserId = chatUserId.value
         messageStore.chatVisible = true
       } else {
-        ElMessage.error(res.data.msg)
+        ElMessage.error(res.data.message)
       }
     })
 }

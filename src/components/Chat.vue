@@ -2,52 +2,92 @@
   <div class="chat-container">
     <div class="chat-body" ref="chatList" @scroll="handleScroll">
       <div v-for="(message, index) in messages" :key="message.id">
-        <span v-if="
-          index == 0 || !isFiveMinutesApart(messages[index - 1].createTime, message.createTime)
-        " class="message-time">{{ message.createTime }}</span>
+        <span
+          v-if="
+            index == 0 || !isFiveMinutesApart(messages[index - 1].createTime, message.createTime)
+          "
+          class="message-time"
+          >{{ message.createTime }}</span
+        >
 
         <div v-if="message.fromUserId === friend!.userId" class="message received">
-          <img :src="friend!.avatar" alt="" style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px" />
+          <img
+            :src="friend!.avatar"
+            alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px"
+          />
 
           <div v-if="message.contentType === 1" class="message-content">{{ message.content }}</div>
           <div v-else-if="message.contentType === 2" class="message-content-img">
-            <img :src="message.content" alt="" style="width: 100px; height: auto"  @click="openImagePreview(message.content)"/>
+            <!-- <img
+              :src="message.content"
+              alt=""
+              style="width: 100px; height: auto"
+              @click="showImagePreview"
+            /> -->
+            <!-- 图片预览弹窗 -->
+            <el-image
+              style="width: 100px; height: auto"
+              :src="message.content"
+              :zoom-rate="1.2"
+              :max-scale="7"
+              :min-scale="0.2"
+              :preview-src-list="srcList"
+              :initial-index="1"
+              fit="cover"
+            />
           </div>
         </div>
 
         <div v-else class="message sent">
           <div v-if="message.contentType === 1" class="message-content">{{ message.content }}</div>
           <div v-else-if="message.contentType === 2" class="message-content-img">
-            <img :src="message.content" alt="" style="width: 100px; height: auto"  @click="openImagePreview(message.content)"/>
+            <!-- 图片预览弹窗 -->
+            <el-image
+              style="width: 100px; height: auto"
+              :src="message.content"
+              :zoom-rate="1.2"
+              :max-scale="7"
+              :min-scale="0.2"
+              :preview-src-list="srcList"
+              :initial-index="1"
+              fit="cover"
+            />
           </div>
-          <img :src="user.headImage!" alt=""
-            style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px" />
+          <img
+            :src="user.headImage!"
+            alt=""
+            style="width: 40px; height: 40px; border-radius: 10%; margin-right: 10px"
+          />
         </div>
-
       </div>
     </div>
     <div class="chat-footer">
       <div class="toolbar">
         <!-- 图片上传按钮 -->
         <button @click="triggerFileInput" class="photo-btn">
-          <img src="../assets/svg/photo.svg" alt="上传图片" style="width: 20px; height: 20px;" />
+          <img src="../assets/svg/photo.svg" alt="上传图片" style="width: 20px; height: 20px" />
         </button>
         <!-- 隐藏的文件选择器 -->
         <input type="file" ref="fileInput" style="display: none" @change="handleImageUpload" />
       </div>
-      <textarea class="input-area" placeholder="请输入内容... Enter发送消息,Shift+Enter换行" v-model="content"
-        @keydown="handleKeyDown"></textarea>
+      <textarea
+        class="input-area"
+        placeholder="请输入内容... Enter发送消息,Shift+Enter换行"
+        v-model="content"
+        @keydown="handleKeyDown"
+      ></textarea>
       <div class="send-btn-container">
-        <button :disabled="isDisabled" class="send-btn" style="height: 40px"
-          @click="sendMessage(content, 1)">发送</button>
+        <button
+          :disabled="isDisabled"
+          class="send-btn"
+          style="height: 40px"
+          @click="sendMessage(content, 1)"
+        >
+          发送
+        </button>
       </div>
-
     </div>
-
-    <!-- 图片预览弹窗 -->
-    <el-dialog v-model="imageDialogVisible" style="width: 100% ;height: 100% ;"  :before-close="closeImagePreview">
-      <img :src="currentImage" alt="预览图片" style="height: 100%" />
-    </el-dialog>
   </div>
 </template>
 
@@ -60,6 +100,7 @@ import { useMessageStore } from '../stores/message'
 import moment from 'moment'
 import rawAxios from 'axios'
 import Compressor from 'compressorjs'
+import { sr } from 'element-plus/es/locales.mjs'
 
 interface Message {
   id: number
@@ -90,13 +131,14 @@ var pageSize = 10
 const messages = ref<Message[]>([])
 const content = ref('')
 const chatList = ref<HTMLElement | null>(null)
-const fileInput = ref<HTMLInputElement | null>(null);
-const isDisabled = computed(() => content.value.trim() === '');
+const fileInput = ref<HTMLInputElement | null>(null)
+const isDisabled = computed(() => content.value.trim() === '')
 var isNearBottom = true // 判断是否接近底部的标志
 const loading = ref(false) // 防止重复加载的标志
 const hasMoreMessages = ref(true) // 判断是否还有更多历史消息
-const imageDialogVisible = ref(false);  // 控制图片预览弹窗是否可见
-const currentImage = ref('');  // 当前要预览的图片
+
+const srcList = ref<string[]>([]) // 图片预览弹窗的图片列表
+const url = ref('') // 图片预览弹窗的当前图片
 
 // 监听 props 变化，以便每次打开弹窗时更新输入框内容
 watch(
@@ -110,16 +152,11 @@ watch(
   }
 )
 
-// 关闭图片预览
-const closeImagePreview = () => {
-  imageDialogVisible.value = false;
-};
-
-// 打开图片预览
-const openImagePreview = (imageUrl: string) => {
-  currentImage.value = imageUrl;
-  imageDialogVisible.value = true;
-};
+function showImagePreview(event: MouseEvent) {
+  const target = event.target as HTMLImageElement
+  const src = target.src
+  url.value = src
+}
 
 function reset() {
   pageNum = 1
@@ -151,6 +188,9 @@ watch(
         if (message.fromUserId == friend.value?.userId) {
           message.createTime = formatTimestamp(message.createTime)
           messages.value.push(message)
+          if (message.contentType === 2) {
+            srcList.value.push(message.content)
+          }
 
           //消息已读
           axios.get('/friend/read', {
@@ -171,21 +211,21 @@ watch(
 )
 
 const triggerFileInput = () => {
-  fileInput.value?.click();
-};
+  fileInput.value?.click()
+}
 
 // 处理图片上传
 const handleImageUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
   if (file) {
-    console.log('Selected image:', file);
-    uploadImage(file);
+    console.log('Selected image:', file)
+    uploadImage(file)
 
     // 重置文件输入框
-    target.value = '';
+    target.value = ''
   }
-};
+}
 
 var uploadUrl = import.meta.env.VITE_IMAGE_URL + '/file/upload'
 function uploadImage(file: File) {
@@ -311,6 +351,12 @@ function loadMoreMessages() {
           const previousHeight = chatList.value!.scrollHeight
           messages.value = [...newMessages, ...messages.value] // 插入新消息
 
+          messages.value.forEach((message) => {
+            if (message.contentType === 2) {
+              srcList.value.push(message.content)
+            }
+          })
+
           // 保留用户当前的滚动位置
           nextTick(() => {
             const newHeight = chatList.value!.scrollHeight
@@ -327,7 +373,6 @@ function loadMoreMessages() {
             scrollToBottom()
           })
         }
-
       } else {
         ElMessage.error(res.data.message)
       }
@@ -375,11 +420,19 @@ function sendMessage(sendContent: string, contentType: number) {
     content.value = ''
   }
 
+  if (message.contentType === 2) {
+    srcList.value.push(message.content)
+  }
+
   // 在下一个 DOM 更新后滚动到底部
   nextTick(() => {
     scrollToBottom()
   })
 }
+
+onMounted(() => {
+  loadMoreMessages()
+})
 </script>
 
 <style scoped>
@@ -408,7 +461,6 @@ function sendMessage(sendContent: string, contentType: number) {
   background: #fff;
   border-top: 1px solid #ddd;
   /* align-items: center; */
-
 }
 
 .message {
@@ -452,8 +504,6 @@ function sendMessage(sendContent: string, contentType: number) {
   margin: 0 10px;
 }
 
-
-
 .toolbar {
   display: flex;
   justify-content: flex-start;
@@ -488,7 +538,6 @@ function sendMessage(sendContent: string, contentType: number) {
   background: white;
 }
 
-
 .send-btn {
   width: 50px;
   background: #007bff;
@@ -503,5 +552,16 @@ function sendMessage(sendContent: string, contentType: number) {
 .send-btn-container {
   display: flex;
   justify-content: flex-end;
+}
+
+.demo-image__error .image-slot {
+  font-size: 30px;
+}
+.demo-image__error .image-slot .el-icon {
+  font-size: 30px;
+}
+.demo-image__error .el-image {
+  width: 100%;
+  height: 200px;
 }
 </style>

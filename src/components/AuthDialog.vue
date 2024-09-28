@@ -212,14 +212,17 @@ function countDown() {
           <el-input v-model="registerForm.phone" />
         </el-form-item>
 
-        <el-form-item label=" " style="width: 90%">
+        <!-- <el-form-item label=" " style="width: 90%">
           <el-button v-if="!isCodeSend" @click="sendCode" style="margin-top: 10px;">获取验证码</el-button>
           <el-button v-else-if="isCodeSend" style="margin-top: 10px;" type="info">{{ expireTime }}</el-button>
-        </el-form-item>
+        </el-form-item> -->
 
         <el-form-item label="验证码" style="width: 90% " prop="code">
-          <el-input v-model="registerForm.code" />
+          <el-input v-model="registerForm.code"  style="width: 50% "/>
+          <el-button v-if="!isCodeSend" @click="sendCode" style="margin-left: auto;">获取验证码</el-button>
+          <el-button v-else-if="isCodeSend" style="margin-left: auto;" type="info">{{ expireTime }}</el-button>
         </el-form-item>
+        
 
         <el-form-item label="账号" style="width: 90%" prop="account">
           <el-input v-model="registerForm.account" />

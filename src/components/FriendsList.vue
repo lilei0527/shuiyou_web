@@ -140,7 +140,7 @@ function deleteFriend(userId: number) {
         deleteDialogVishble.value = false
         friends.value = friends.value?.filter((item) => item.userId !== userId)
       } else {
-        ElMessage.error(res.data.msg)
+        ElMessage.error(res.data.message)
       }
     })
 }
@@ -276,7 +276,7 @@ function loadFriends() {
       }
       
     } else {
-      ElMessage.error(res.data.msg)
+      ElMessage.error(res.data.message)
       return
     }
   })

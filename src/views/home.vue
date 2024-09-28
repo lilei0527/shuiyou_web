@@ -76,8 +76,11 @@ import Footer from '../components/Footer.vue'
 import { useMessageStore } from '../stores/message'
 import ChatView from '../components/ChatView.vue'
 import axios from '@/axios'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { activeIndex } from '../stores/global'
+
+
+
 
 
 var hideMenuTimeout: any
