@@ -163,10 +163,12 @@ function gotoCoin() {
 // })
 
 const $router = useRouter()
-const handleSelect = (key: string, keyPath: string[]) => {
+const handleSelect = (key: string) => {
   if (key === '1') {
+    activeIndex.value = '1'
     $router.push({ path: '/' })
   } else if (key === '2') {
+    activeIndex.value = '2'
     $router.push({ path: '/task' })
   }
 }
